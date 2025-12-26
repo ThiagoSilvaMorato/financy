@@ -34,7 +34,7 @@ async function bootstrap() {
   );
 
   app.listen({ port: 4000 }, () => {
-    console.log("Server is running on http://localhost:4000/graphql");
+    console.log("🚀 Server is running on http://localhost:4000/graphql");
   });
 }
 
