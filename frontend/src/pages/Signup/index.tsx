@@ -53,7 +53,7 @@ export const Signup = () => {
               label='Nome completo'
               value={name}
               setValue={setName}
-              placeholder='mail@exemplo.com'
+              placeholder='Seu nome completo'
               icon={<User size={20} />}
               required
             />

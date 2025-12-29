@@ -7,18 +7,33 @@ import { Button } from "@/components/ui/button";
 import { CustomCheckbox } from "@/components/CustomCheckbox";
 import Divider from "@/components/Divider";
 import { useNavigate } from "react-router";
+import { useAuthStore } from "@/stores/auth";
+import { toast } from "sonner";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Email:", email);
-    console.log("Password:", password);
+    setLoading(true);
+
+    try {
+      const loginMutate = await login({ email, password });
+
+      if (loginMutate) {
+        toast.success("Login realizado com sucesso!");
+        // navigate("/");
+      }
+    } catch {
+      toast.error("Erro ao fazer login. Verifique suas credenciais.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -63,7 +78,7 @@ export const Login = () => {
               </span>
             </div>
 
-            <Button type='submit' className='w-full mt-4 h-[48px]'>
+            <Button type='submit' className='w-full mt-4 h-[48px]' disabled={loading}>
               Entrar
             </Button>
           </form>
