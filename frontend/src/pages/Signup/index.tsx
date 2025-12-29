@@ -27,6 +27,7 @@ export const Signup = () => {
 
       if (signupMutate) {
         toast.success("Cadastro realizado com sucesso!");
+        navigate("/login");
       }
     } catch {
       toast.error("Erro ao cadastrar usuário. Tente novamente.");
