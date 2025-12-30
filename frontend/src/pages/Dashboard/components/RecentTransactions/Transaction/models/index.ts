@@ -5,4 +5,5 @@ export interface ITransactionProps {
   amount: number;
   icon?: string;
   color: string;
+  category: string;
 }

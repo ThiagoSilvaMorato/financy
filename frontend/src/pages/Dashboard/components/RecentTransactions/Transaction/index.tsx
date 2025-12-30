@@ -4,7 +4,15 @@ import type { ITransactionProps } from "./models";
 import { extendedColorMap } from "@/utils/colorMap";
 import { getLucideIcon } from "@/utils/getLucideIcon";
 
-export const Transaction = ({ icon, title, date, type, amount, color }: ITransactionProps) => {
+export const Transaction = ({
+  icon,
+  title,
+  date,
+  type,
+  amount,
+  color,
+  category,
+}: ITransactionProps) => {
   const colorObj = extendedColorMap[color] ?? extendedColorMap["green"];
   const hex = colorObj.hex;
 
@@ -31,7 +39,7 @@ export const Transaction = ({ icon, title, date, type, amount, color }: ITransac
 
         <div className='w-auto mx-auto px-4 rounded-full' style={bgStyle}>
           <span className='text-sm' style={textStyle}>
-            {isIncome ? "Receita" : "Despesa"}
+            {category}
           </span>
         </div>
 
@@ -39,7 +47,11 @@ export const Transaction = ({ icon, title, date, type, amount, color }: ITransac
           <span>
             {sign} R$ {formattedAmount}
           </span>
-          <DirectionIcon size={20} className='ml-2' style={{ color: isIncome ? hex : "#dc2627" }} />
+          <DirectionIcon
+            size={20}
+            className='ml-2'
+            style={{ color: isIncome ? "#30a956" : "#dc2627" }}
+          />
         </div>
       </div>
       <Divider />

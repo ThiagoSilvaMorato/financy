@@ -6,5 +6,4 @@ export const extendedColorMap: Record<string, { hex: string }> = {
   red: { hex: "#dc2627" },
   orange: { hex: "#ea580b" },
   yellow: { hex: "#ca8a03" },
-  gray: { hex: "#6b7280" },
 };
