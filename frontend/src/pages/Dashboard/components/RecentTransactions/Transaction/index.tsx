@@ -3,6 +3,7 @@ import { CircleArrowUp, CircleArrowDown } from "lucide-react";
 import type { ITransactionProps } from "./models";
 import { extendedColorMap } from "@/utils/colorMap";
 import { getLucideIcon } from "@/utils/getLucideIcon";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 export const Transaction = ({
   icon,
@@ -22,7 +23,6 @@ export const Transaction = ({
   const isIncome = type === "income";
   const sign = isIncome ? "+" : "-";
   const DirectionIcon = isIncome ? CircleArrowUp : CircleArrowDown;
-  const formattedAmount = Number(amount).toFixed(2).replace(".", ",");
 
   return (
     <>
@@ -45,7 +45,7 @@ export const Transaction = ({
 
         <div className='flex justify-end font-medium items-center'>
           <span>
-            {sign} R$ {formattedAmount}
+            {sign} R$ {formatCurrency(amount)}
           </span>
           <DirectionIcon
             size={20}

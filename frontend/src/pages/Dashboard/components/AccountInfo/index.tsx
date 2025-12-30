@@ -3,7 +3,7 @@ import { CircleArrowDown, CircleArrowUp, Wallet } from "lucide-react";
 
 export const AccountInfo = () => {
   return (
-    <div className='grid grid-cols-3 gap-4 w-full'>
+    <div className='grid grid-cols-1 md:grid-cols-3 gap-4 w-full'>
       <Card className='p-6 gap-4'>
         <div className='flex items-center gap-4 mb-4'>
           <Wallet className='h-6 w-6 text-[#9333ea]' />

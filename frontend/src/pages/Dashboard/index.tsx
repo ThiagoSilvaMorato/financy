@@ -9,7 +9,7 @@ export const Dashboard = () => {
       <div className='space-y-6'>
         <div className='flex flex-col items-center justify-between'>
           <AccountInfo />
-          <div className='w-full mt-6 space-y-6 grid grid-cols-1 md:grid-cols-3 gap-4'>
+          <div className='w-full mt-6 grid grid-cols-1 md:grid-cols-3 gap-4'>
             <RecentTransactions />
             <Categories />
           </div>
