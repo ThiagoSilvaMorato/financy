@@ -4,13 +4,24 @@ import { Page } from "@/components/Page";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
+import { apolloClient } from "@/lib/graphql/apollo";
+import { USER } from "@/lib/graphql/mutation/User";
 import { useAuthStore } from "@/stores/auth";
+import type { UpdateUserInput } from "@/types";
 import { LogOut, Mail, User } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
+
+type UpdateUserMutationData = {
+  updateUser: {
+    name: string;
+    email: string;
+  };
+};
 
 export const Profile = () => {
-  const { user, logout } = useAuthStore();
+  const { user, logout, updateUser: updateAuthUser } = useAuthStore();
 
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -18,9 +29,27 @@ export const Profile = () => {
 
   const navigate = useNavigate();
 
-  // TODO: implement update user info
-  const updateUser = () => {
-    console.log({ name, email });
+  const handleUpdateUser = async () => {
+    try {
+      const { data } = await apolloClient.mutate<UpdateUserMutationData, { data: UpdateUserInput }>(
+        {
+          mutation: USER,
+          variables: {
+            data: {
+              name,
+              email,
+            },
+          },
+        }
+      );
+
+      if (data?.updateUser) {
+        updateAuthUser({ name, email });
+        toast.success("Usuário atualizado com sucesso!");
+      }
+    } catch {
+      toast.error("Erro ao atualizar usuário.");
+    }
   };
 
   const handleLogout = async () => {
@@ -80,7 +109,7 @@ export const Profile = () => {
             </div>
 
             <div className='mt-10'>
-              <Button className='w-full h-12' onClick={updateUser} disabled={loading}>
+              <Button className='w-full h-12' onClick={handleUpdateUser} disabled={loading}>
                 Salvar Alterações
               </Button>
               <Button

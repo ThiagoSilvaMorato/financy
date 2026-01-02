@@ -9,6 +9,8 @@ const httpLink = new HttpLink({
 const authLink = new SetContextLink((prevContext) => {
   const token = useAuthStore.getState().token;
 
+  console.log("Setting auth token in Apollo Client:", token);
+
   return {
     headers: {
       ...prevContext.headers,
@@ -18,6 +20,6 @@ const authLink = new SetContextLink((prevContext) => {
 });
 
 export const apolloClient = new ApolloClient({
-  link: ApolloLink.from([httpLink, authLink]),
+  link: ApolloLink.from([authLink, httpLink]),
   cache: new InMemoryCache(),
 });

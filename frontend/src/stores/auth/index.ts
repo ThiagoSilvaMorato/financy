@@ -1,7 +1,7 @@
 import type { LoginInput, RegisterInput, User } from "@/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { apolloClient } from "@/lib/apollo";
+import { apolloClient } from "@/lib/graphql/apollo";
 import { REGISTER } from "@/lib/graphql/mutation/Register";
 import { LOGIN } from "@/lib/graphql/mutation/Login";
 
@@ -28,6 +28,7 @@ interface AuthState {
   signup: (data: RegisterInput) => Promise<boolean>;
   login: (data: LoginInput) => Promise<boolean>;
   logout: () => Promise<boolean>;
+  updateUser: (data: Partial<User>) => void; // <-- added action
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -36,6 +37,12 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
+
+      updateUser: (userData: Partial<User>) => {
+        set((state) => ({
+          user: state.user ? { ...state.user, ...userData } : state.user,
+        }));
+      },
 
       login: async (loginData: LoginInput) => {
         try {
