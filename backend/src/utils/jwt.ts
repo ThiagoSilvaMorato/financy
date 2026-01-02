@@ -3,6 +3,8 @@ import jwt, { Secret, SignOptions } from "jsonwebtoken";
 export type JwtPayload = {
   id: string;
   email: string;
+  type: string;
+  rememberMe?: boolean;
 };
 
 export const signJwt = (payload: JwtPayload, expiresIn?: string): string => {

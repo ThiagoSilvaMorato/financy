@@ -23,3 +23,9 @@ export class LoginInput {
   @Field(() => Boolean)
   rememberMe!: boolean;
 }
+
+@InputType()
+export class RefreshTokenInput {
+  @Field(() => String)
+  refreshToken!: string;
+}

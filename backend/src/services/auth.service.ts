@@ -1,8 +1,8 @@
 import { prismaClient } from "../../prisma/prisma";
-import { LoginInput, RegisterInput } from "../dto/input/auth.input";
+import { LoginInput, RefreshTokenInput, RegisterInput } from "../dto/input/auth.input";
 import { UserModel } from "../models/user.model";
 import { comparePassword, hashPassword } from "../utils/hash";
-import { signJwt } from "../utils/jwt";
+import { signJwt, verifyJwt } from "../utils/jwt";
 
 export class AuthService {
   async login(data: LoginInput) {
@@ -15,6 +15,26 @@ export class AuthService {
     if (!isPasswordValid) throw new Error("E-mail ou senha inválidos.");
 
     return this.generateTokens(existingUser, data.rememberMe);
+  }
+
+  async refreshToken(data: RefreshTokenInput) {
+    let decoded: any;
+    try {
+      decoded = verifyJwt(data.refreshToken);
+    } catch (err) {
+      throw new Error("Token inválido.");
+    }
+    if (!decoded) throw new Error("Token inválido.");
+
+    if (decoded.type !== "refresh") throw new Error("Token de refresh inválido.");
+
+    const user = await prismaClient.user.findUnique({
+      where: { id: decoded.id },
+    });
+    if (!user) throw new Error("Usuário não encontrado.");
+
+    const remember = Boolean(decoded.rememberMe);
+    return this.generateTokens(user, remember);
   }
 
   async register(data: RegisterInput) {
@@ -44,6 +64,7 @@ export class AuthService {
       {
         id: user.id,
         email: user.email,
+        type: "access",
       },
       accessTokenExpiry
     );
@@ -51,6 +72,8 @@ export class AuthService {
       {
         id: user.id,
         email: user.email,
+        type: "refresh",
+        rememberMe,
       },
       refreshTokenExpiry
     );
