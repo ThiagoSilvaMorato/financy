@@ -1,7 +1,7 @@
 import logo from "@/assets/logo.svg";
 import { CustomInput } from "@/components/CustomInput";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Lock, Mail, UserRoundPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CustomCheckbox } from "@/components/CustomCheckbox";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const login = useAuthStore((state) => state.login);
@@ -23,7 +24,7 @@ export const Login = () => {
     setLoading(true);
 
     try {
-      const loginMutate = await login({ email, password });
+      const loginMutate = await login({ email, password, rememberMe });
 
       if (loginMutate) {
         toast.success("Login realizado com sucesso!");
@@ -35,6 +36,10 @@ export const Login = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    console.log(rememberMe);
+  }, [rememberMe]);
 
   return (
     <div className='flex flex-col min-h-[calc(100vh-4rem)] items-center justify-center gap-6'>
@@ -69,7 +74,12 @@ export const Login = () => {
             />
 
             <div className='flex items-center justify-between pb-3'>
-              <CustomCheckbox id='remember' label='Lembrar-me' />
+              <CustomCheckbox
+                id='remember'
+                label='Lembrar-me'
+                checked={rememberMe}
+                onChange={(v) => setRememberMe(v)}
+              />
               <span
                 className='text-primary underline hover:cursor-pointer hover:brightness-125'
                 onClick={() => console.log("Recuperar senha")}

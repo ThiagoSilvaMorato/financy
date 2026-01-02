@@ -9,8 +9,6 @@ const httpLink = new HttpLink({
 const authLink = new SetContextLink((prevContext) => {
   const token = useAuthStore.getState().token;
 
-  console.log("Setting auth token in Apollo Client:", token);
-
   return {
     headers: {
       ...prevContext.headers,

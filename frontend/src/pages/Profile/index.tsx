@@ -55,9 +55,7 @@ export const Profile = () => {
   const handleLogout = async () => {
     setLoading(true);
     try {
-      const response = await logout();
-
-      console.log(response);
+      await logout();
 
       navigate("/login");
     } catch {

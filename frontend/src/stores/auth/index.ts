@@ -52,6 +52,7 @@ export const useAuthStore = create<AuthState>()(
               data: {
                 email: loginData.email,
                 password: loginData.password,
+                rememberMe: loginData.rememberMe,
               },
             },
           });
