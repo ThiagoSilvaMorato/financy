@@ -27,6 +27,7 @@ interface AuthState {
   isAuthenticated: boolean;
   signup: (data: RegisterInput) => Promise<boolean>;
   login: (data: LoginInput) => Promise<boolean>;
+  logout: () => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -109,6 +110,38 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error("Signup error:", error);
           throw error;
+        }
+      },
+
+      logout: async () => {
+        try {
+          // clear local state
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+          });
+
+          // remove persisted storage (same name used in persist options)
+          if (typeof window !== "undefined" && window.localStorage) {
+            try {
+              window.localStorage.removeItem("auth-storage");
+            } catch {
+              console.error("localStorage remove error during logout");
+            }
+          }
+
+          // reset apollo client cache/state
+          try {
+            await apolloClient.resetStore();
+          } catch (e) {
+            console.error("Apollo reset error during logout:", e);
+          }
+
+          return true;
+        } catch (error) {
+          console.error("Logout error:", error);
+          return false;
         }
       },
     }),

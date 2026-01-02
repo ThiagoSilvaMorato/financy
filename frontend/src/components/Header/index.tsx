@@ -19,7 +19,7 @@ export const Header = () => {
               className='cursor-pointer hover:brightness-110 transition-all'
               onClick={() => navigate("/profile")}
             >
-              <AvatarFallback className='bg-gray-300 tedt-primary-foreground'>
+              <AvatarFallback className='bg-gray-300'>
                 {user?.name
                   .split(" ")
                   .slice(0, 2)

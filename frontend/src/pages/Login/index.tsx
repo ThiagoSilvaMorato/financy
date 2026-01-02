@@ -27,7 +27,7 @@ export const Login = () => {
 
       if (loginMutate) {
         toast.success("Login realizado com sucesso!");
-        // navigate("/");
+        navigate("/");
       }
     } catch {
       toast.error("Erro ao fazer login. Verifique suas credenciais.");
