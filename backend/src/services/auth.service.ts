@@ -14,7 +14,7 @@ export class AuthService {
     const isPasswordValid = comparePassword(data.password, existingUser.password);
     if (!isPasswordValid) throw new Error("E-mail ou senha inválidos.");
 
-    return this.generateTokens(existingUser);
+    return this.generateTokens(existingUser, data.rememberMe);
   }
 
   async register(data: RegisterInput) {
@@ -36,20 +36,23 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  generateTokens(user: UserModel) {
+  generateTokens(user: UserModel, rememberMe = false) {
+    const accessTokenExpiry = "15m";
+    const refreshTokenExpiry = rememberMe ? "7d" : "8h";
+
     const token = signJwt(
       {
         id: user.id,
         email: user.email,
       },
-      "15m"
+      accessTokenExpiry
     );
     const refreshToken = signJwt(
       {
         id: user.id,
         email: user.email,
       },
-      "15m"
+      refreshTokenExpiry
     );
 
     return { token, refreshToken, user };

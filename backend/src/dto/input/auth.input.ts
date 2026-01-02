@@ -19,4 +19,7 @@ export class LoginInput {
 
   @Field(() => String)
   password!: string;
+
+  @Field(() => Boolean)
+  rememberMe!: boolean;
 }

@@ -41,6 +41,7 @@ scalar DateTimeISO
 input LoginInput {
   email: String!
   password: String!
+  rememberMe: Boolean!
 }
 
 type LoginOutput {
