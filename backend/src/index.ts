@@ -29,6 +29,33 @@ async function bootstrap() {
 
   const server = new ApolloServer({
     schema,
+    plugins: [
+      {
+        async requestDidStart() {
+          return {
+            async willSendResponse(requestContext) {
+              const res = (requestContext.contextValue as any)?.res as express.Response | undefined;
+              if (!res) return;
+
+              const errors =
+                (requestContext.response as any)?.errors ??
+                (requestContext.response as any)?.body?.errors;
+              if (errors && (errors as any[]).length > 0) {
+                const hasAuth = (errors as any[]).some(
+                  (e) => e.extensions?.code === "UNAUTHENTICATED"
+                );
+                if (hasAuth) {
+                  res.status(401);
+                  return;
+                }
+                res.status(400);
+                return;
+              }
+            },
+          };
+        },
+      },
+    ],
   });
 
   await server.start();

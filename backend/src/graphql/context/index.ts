@@ -13,16 +13,17 @@ export const buildContext = async ({
   res,
 }: ExpressContextFunctionArgument): Promise<GraphqlContext> => {
   const authHeader = req.headers.authorization;
-  let user: string | undefined = undefined;
-  let token: string | undefined = undefined;
-
+  let user: string | undefined;
+  let token: string | undefined;
   if (authHeader?.startsWith("Bearer ")) {
     token = authHeader.substring("Bearer ".length);
     try {
-      const payload = verifyJwt(token) as JwtPayload;
+      const payload = verifyJwt(token);
       user = payload.id;
-    } catch (error) {}
-
-    return { user, token, req, res };
+    } catch (error) {
+      console.error(error);
+    }
   }
+
+  return { user, token, req, res };
 };

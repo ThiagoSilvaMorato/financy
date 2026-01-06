@@ -11,8 +11,9 @@ export class AuthService {
     });
     if (!existingUser) throw new Error("E-mail ou senha inválidos.");
 
-    const isPasswordValid = comparePassword(data.password, existingUser.password);
+    const isPasswordValid = await comparePassword(data.password, existingUser.password);
     if (!isPasswordValid) throw new Error("E-mail ou senha inválidos.");
+    console.log(existingUser, isPasswordValid);
 
     return this.generateTokens(existingUser, data.rememberMe);
   }
@@ -57,7 +58,7 @@ export class AuthService {
   }
 
   generateTokens(user: UserModel, rememberMe = false) {
-    const accessTokenExpiry = "15m";
+    const accessTokenExpiry = "5s";
     const refreshTokenExpiry = rememberMe ? "7d" : "8h";
 
     const token = signJwt(
