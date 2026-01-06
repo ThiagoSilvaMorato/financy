@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useAuthStore } from "./stores/auth";
 import { Dashboard } from "./pages/Dashboard";
 import { Profile } from "./pages/Profile";
+import { Transactions } from "./pages/Transactions";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -19,7 +20,7 @@ function PublicRoute({ children }: { children: ReactNode }) {
 
 function App() {
   return (
-    <Layout>
+    <Layout isAuthenticated={useAuthStore((state) => state.isAuthenticated)}>
       <Routes>
         <Route
           path='/login'
@@ -51,6 +52,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/transactions'
+          element={
+            <ProtectedRoute>
+              <Transactions />
             </ProtectedRoute>
           }
         />

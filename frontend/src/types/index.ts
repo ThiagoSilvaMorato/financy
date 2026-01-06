@@ -19,6 +19,10 @@ export interface LoginInput {
   rememberMe: boolean;
 }
 
+export interface RefreshTokenInput {
+  refreshToken: string;
+}
+
 export interface UpdateUserInput {
   name: string;
   email: string;

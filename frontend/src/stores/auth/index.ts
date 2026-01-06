@@ -1,9 +1,12 @@
+import { env } from "@/env";
 import type { LoginInput, RegisterInput, User } from "@/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { print } from "graphql";
 import { apolloClient } from "@/lib/graphql/apollo";
 import { REGISTER } from "@/lib/graphql/mutation/Register";
 import { LOGIN } from "@/lib/graphql/mutation/Login";
+import { REFRESH_TOKEN } from "@/lib/graphql/mutation/RefreshToken";
 
 type RegisterMutationData = {
   register: {
@@ -24,18 +27,21 @@ type LoginMutationData = {
 interface AuthState {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   signup: (data: RegisterInput) => Promise<boolean>;
   login: (data: LoginInput) => Promise<boolean>;
   logout: () => Promise<boolean>;
-  updateUser: (data: Partial<User>) => void; // <-- added action
+  updateUser: (data: Partial<User>) => void;
+  refreshSession: () => Promise<string | null>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
 
       updateUser: (userData: Partial<User>) => {
@@ -58,11 +64,11 @@ export const useAuthStore = create<AuthState>()(
           });
 
           if (data?.login) {
-            const { token, user } = data.login;
+            const { token, refreshToken, user } = data.login;
 
             set({
               user: {
-                id: user.name,
+                id: user.id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
@@ -70,6 +76,7 @@ export const useAuthStore = create<AuthState>()(
                 updatedAt: user.updatedAt,
               },
               token,
+              refreshToken,
               isAuthenticated: true,
             });
             return true;
@@ -98,11 +105,11 @@ export const useAuthStore = create<AuthState>()(
           );
 
           if (data?.register) {
-            const { token, user } = data.register;
+            const { token, refreshToken, user } = data.register;
 
             set({
               user: {
-                id: user.name,
+                id: user.id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
@@ -110,6 +117,7 @@ export const useAuthStore = create<AuthState>()(
                 updatedAt: user.updatedAt,
               },
               token,
+              refreshToken,
               isAuthenticated: true,
             });
             return true;
@@ -123,14 +131,13 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          // clear local state
           set({
             user: null,
             token: null,
+            refreshToken: null,
             isAuthenticated: false,
           });
 
-          // remove persisted storage (same name used in persist options)
           if (typeof window !== "undefined" && window.localStorage) {
             try {
               window.localStorage.removeItem("auth-storage");
@@ -139,7 +146,6 @@ export const useAuthStore = create<AuthState>()(
             }
           }
 
-          // reset apollo client cache/state
           try {
             await apolloClient.resetStore();
           } catch (e) {
@@ -150,6 +156,45 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error("Logout error:", error);
           return false;
+        }
+      },
+
+      refreshSession: async () => {
+        const { refreshToken } = get();
+        if (!refreshToken) {
+          get().logout();
+          return null;
+        }
+
+        try {
+          const response = await fetch(env.VITE_BACKEND_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              query: print(REFRESH_TOKEN),
+              variables: {
+                data: {
+                  refreshToken: refreshToken,
+                },
+              },
+            }),
+          });
+
+          const { data, errors } = await response.json();
+
+          if (errors || !data?.refreshToken) {
+            get().logout();
+            return null;
+          }
+
+          const { token: newToken, refreshToken: newRefreshToken } = data.refreshToken;
+          set({ token: newToken, refreshToken: newRefreshToken });
+          return newToken;
+        } catch {
+          get().logout();
+          return null;
         }
       },
     }),
