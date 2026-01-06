@@ -58,7 +58,7 @@ export class AuthService {
   }
 
   generateTokens(user: UserModel, rememberMe = false) {
-    const accessTokenExpiry = "5s";
+    const accessTokenExpiry = "15m";
     const refreshTokenExpiry = rememberMe ? "7d" : "8h";
 
     const token = signJwt(
