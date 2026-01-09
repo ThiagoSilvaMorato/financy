@@ -27,3 +27,14 @@ export interface UpdateUserInput {
   name: string;
   email: string;
 }
+
+export interface ForgotPasswordInput {
+  email: string;
+}
+
+export interface RecoverPasswordInput {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  code: string;
+}

@@ -12,17 +12,34 @@ export const CustomInput = ({
   icon,
   type = "text",
   helperText,
+  error,
   ...props
 }: ICustomInputProps) => {
-  const { className, ...rest } = props;
+  const { className, onChange, ...rest } = props;
   const [showPassword, setShowPassword] = useState(false);
 
   const isPassword = type === "password";
   const inputType = isPassword ? (showPassword ? "text" : "password") : type;
 
-  const mergedClassName = [className, icon ? "pl-10" : null, isPassword ? "pr-10" : null, "h-12"]
+  const hasError = Boolean(error);
+
+  const mergedClassName = [
+    className,
+    icon ? "pl-10" : null,
+    isPassword ? "pr-10" : null,
+    "h-12",
+    hasError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : null,
+  ]
     .filter(Boolean)
     .join(" ");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (setValue) {
+      setValue(e.target.value);
+    } else if (onChange) {
+      (onChange as (e: React.ChangeEvent<HTMLInputElement>) => void)(e);
+    }
+  };
 
   return (
     <div className='space-y-1'>
@@ -38,9 +55,11 @@ export const CustomInput = ({
         <Input
           id={id}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={handleChange}
           className={mergedClassName}
           type={inputType}
+          aria-invalid={hasError}
+          aria-describedby={hasError ? `${id}-error` : undefined}
           {...rest}
         />
 
@@ -56,7 +75,13 @@ export const CustomInput = ({
         )}
       </div>
 
-      {helperText && <p className='text-sm text-zinc-500 mt-1'>{helperText}</p>}
+      {hasError ? (
+        <p id={`${id}-error`} className='text-sm text-red-500 mt-1'>
+          {error}
+        </p>
+      ) : (
+        helperText && <p className='text-sm text-zinc-500 mt-1'>{helperText}</p>
+      )}
     </div>
   );
 };

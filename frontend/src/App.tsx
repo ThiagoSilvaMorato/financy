@@ -7,6 +7,8 @@ import { useAuthStore } from "./stores/auth";
 import { Dashboard } from "./pages/Dashboard";
 import { Profile } from "./pages/Profile";
 import { Transactions } from "./pages/Transactions";
+import { RecoverPassword } from "./pages/RecoverPassword";
+import { ResetPassword } from "./pages/ResetPassword";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -35,6 +37,22 @@ function App() {
           element={
             <PublicRoute>
               <Signup />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path='/recover-password'
+          element={
+            <PublicRoute>
+              <RecoverPassword />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path='/reset-password'
+          element={
+            <PublicRoute>
+              <ResetPassword />
             </PublicRoute>
           }
         />

@@ -78,7 +78,7 @@ export const Login = () => {
               />
               <span
                 className='text-primary underline hover:cursor-pointer hover:brightness-125'
-                onClick={() => console.log("Recuperar senha")}
+                onClick={() => navigate("/recover-password")}
               >
                 Recuperar senha
               </span>
