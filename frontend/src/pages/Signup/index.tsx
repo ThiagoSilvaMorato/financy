@@ -8,22 +8,45 @@ import Divider from "@/components/Divider";
 import { useNavigate } from "react-router";
 import { useAuthStore } from "@/stores/auth";
 import { toast } from "sonner";
+import * as yup from "yup";
+import { Controller, useForm, type Resolver } from "react-hook-form";
+import type { SignupForm } from "./models";
+import { yupResolver } from "@hookform/resolvers/yup";
+
+const validationSchema = yup.object().shape({
+  name: yup.string().trim().required("Nome é obrigatório"),
+  email: yup.string().trim().required("E-mail é obrigatório").email("E-mail inválido"),
+  password: yup
+    .string()
+    .trim()
+    .required("Senha é obrigatória")
+    .min(8, "A senha deve ter pelo menos 8 caracteres"),
+});
 
 export const Signup = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const signup = useAuthStore((state) => state.signup);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignupForm>({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+    resolver: yupResolver(validationSchema) as Resolver<SignupForm>,
+  });
+
+  const handleFormSubmit = async (data: SignupForm) => {
     setLoading(true);
 
     try {
-      const signupMutate = await signup({ name, email, password });
+      const signupMutate = await signup(data);
 
       if (signupMutate) {
         toast.success("Cadastro realizado com sucesso!");
@@ -46,37 +69,51 @@ export const Signup = () => {
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className='space-y-4'>
-            <CustomInput
-              id='name'
-              type='name'
-              label='Nome completo'
-              value={name}
-              setValue={setName}
-              placeholder='Seu nome completo'
-              icon={<User size={20} />}
-              required
+          <form onSubmit={handleSubmit(handleFormSubmit)} className='space-y-4'>
+            <Controller
+              control={control}
+              name='name'
+              render={({ field }) => (
+                <CustomInput
+                  id='name'
+                  type='name'
+                  label='Nome completo'
+                  placeholder='Seu nome completo'
+                  icon={<User size={20} />}
+                  error={errors.name?.message}
+                  {...field}
+                />
+              )}
             />
-            <CustomInput
-              id='email'
-              type='email'
-              label='E-mail'
-              value={email}
-              setValue={setEmail}
-              placeholder='mail@exemplo.com'
-              icon={<Mail size={20} />}
-              required
+            <Controller
+              name='email'
+              control={control}
+              render={({ field }) => (
+                <CustomInput
+                  id='email'
+                  type='text'
+                  label='E-mail'
+                  placeholder='mail@example.com'
+                  icon={<Mail size={20} />}
+                  error={errors.email?.message}
+                  {...field}
+                />
+              )}
             />
-            <CustomInput
-              id='password'
-              type='password'
-              label='Senha'
-              value={password}
-              setValue={setPassword}
-              placeholder='Digite sua senha'
-              icon={<Lock size={20} />}
-              helperText='A senha deve ter no mínimo 8 caracteres'
-              required
+            <Controller
+              name='password'
+              control={control}
+              render={({ field }) => (
+                <CustomInput
+                  id='password'
+                  type='password'
+                  label='Senha'
+                  placeholder='Digite a nova senha'
+                  icon={<Lock size={20} />}
+                  error={errors.password?.message}
+                  {...field}
+                />
+              )}
             />
 
             <div className='pt-3'>
