@@ -9,22 +9,41 @@ import Divider from "@/components/Divider";
 import { useNavigate } from "react-router";
 import { useAuthStore } from "@/stores/auth";
 import { toast } from "sonner";
+import * as yup from "yup";
+import { Controller, useForm, type Resolver } from "react-hook-form";
+import type { LoginForm } from "./models";
+import { yupResolver } from "@hookform/resolvers/yup";
+
+const validationSchema = yup.object().shape({
+  email: yup.string().trim().required("E-mail é obrigatório").email("E-mail inválido"),
+  password: yup.string().trim().required("Senha é obrigatória"),
+  rememberMe: yup.boolean(),
+});
 
 export const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginForm>({
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
+    resolver: yupResolver(validationSchema) as Resolver<LoginForm>,
+  });
+
+  const handleFormSubmit = async (data: LoginForm) => {
     setLoading(true);
 
     try {
-      const loginMutate = await login({ email, password, rememberMe });
+      const loginMutate = await login(data);
 
       if (loginMutate) {
         toast.success("Login realizado com sucesso!");
@@ -47,34 +66,50 @@ export const Login = () => {
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className='space-y-4'>
-            <CustomInput
-              id='email'
-              type='email'
-              label='E-mail'
-              value={email}
-              setValue={setEmail}
-              placeholder='mail@exemplo.com'
-              icon={<Mail size={20} />}
-              required
+          <form onSubmit={handleSubmit(handleFormSubmit)} className='space-y-4'>
+            <Controller
+              name='email'
+              control={control}
+              render={({ field }) => (
+                <CustomInput
+                  id='email'
+                  type='text'
+                  label='E-mail'
+                  placeholder='mail@example.com'
+                  icon={<Mail size={20} />}
+                  error={errors.email?.message}
+                  {...field}
+                />
+              )}
             />
-            <CustomInput
-              id='password'
-              type='password'
-              label='Senha'
-              value={password}
-              setValue={setPassword}
-              placeholder='Digite sua senha'
-              icon={<Lock size={20} />}
-              required
+            <Controller
+              name='password'
+              control={control}
+              render={({ field }) => (
+                <CustomInput
+                  id='password'
+                  type='password'
+                  label='Senha'
+                  placeholder='Digite a nova senha'
+                  icon={<Lock size={20} />}
+                  error={errors.password?.message}
+                  {...field}
+                />
+              )}
             />
 
             <div className='flex items-center justify-between pb-3'>
-              <CustomCheckbox
-                id='remember'
-                label='Lembrar-me'
-                checked={rememberMe}
-                onChange={(v) => setRememberMe(v)}
+              <Controller
+                control={control}
+                name='rememberMe'
+                render={({ field }) => (
+                  <CustomCheckbox
+                    id='remember'
+                    label='Lembrar-me'
+                    checked={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               <span
                 className='text-primary underline hover:cursor-pointer hover:brightness-125'
