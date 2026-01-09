@@ -4,6 +4,7 @@ import { getLucideIcon } from "@/utils/getLucideIcon";
 import { CircleArrowDown, CircleArrowUp, Edit, Trash } from "lucide-react";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { Button } from "@/components/ui/button";
+import moment from "moment";
 
 export const tableColumns = () => {
   return [
@@ -33,6 +34,9 @@ export const tableColumns = () => {
       accessorKey: "date",
       header: "Data",
       align: "center",
+      render: (row: TransactionModel) => {
+        return moment(row.date).format("DD/MM/YYYY");
+      },
     },
     {
       accessorKey: "category",

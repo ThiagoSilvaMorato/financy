@@ -1,7 +1,7 @@
 import logo from "@/assets/logo.svg";
 import { CustomInput } from "@/components/CustomInput";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Lock, Mail, UserRoundPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CustomCheckbox } from "@/components/CustomCheckbox";
@@ -36,10 +36,6 @@ export const Login = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    console.log(rememberMe);
-  }, [rememberMe]);
 
   return (
     <div className='flex flex-col min-h-[calc(100vh-4rem)] items-center justify-center gap-6'>
