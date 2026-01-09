@@ -31,7 +31,7 @@ export class RefreshTokenInput {
 }
 
 @InputType()
-export class ForgotPasswordInput {
+export class RecoverPasswordInput {
   @Field(() => String)
   email!: string;
 }

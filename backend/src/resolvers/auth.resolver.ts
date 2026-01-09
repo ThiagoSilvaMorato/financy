@@ -1,6 +1,6 @@
 import { Arg, Mutation, Resolver } from "type-graphql";
 import {
-  ForgotPasswordInput,
+  RecoverPasswordInput,
   LoginInput,
   RefreshTokenInput,
   RegisterInput,
@@ -33,10 +33,10 @@ export class AuthResolver {
   }
 
   @Mutation(() => Boolean)
-  async forgotPassword(
-    @Arg("data", () => ForgotPasswordInput) data: ForgotPasswordInput
+  async recoverPassword(
+    @Arg("data", () => RecoverPasswordInput) data: RecoverPasswordInput
   ): Promise<boolean> {
-    return this.authService.forgotPassword(data.email);
+    return this.authService.recoverPassword(data.email);
   }
 
   @Mutation(() => Boolean)

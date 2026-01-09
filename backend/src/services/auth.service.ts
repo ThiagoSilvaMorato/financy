@@ -88,7 +88,7 @@ export class AuthService {
     return { token, refreshToken, user };
   }
 
-  async forgotPassword(email: string) {
+  async recoverPassword(email: string) {
     const user = await prismaClient.user.findUnique({
       where: { email },
     });
