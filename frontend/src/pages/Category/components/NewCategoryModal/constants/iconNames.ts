@@ -1,0 +1,18 @@
+export const iconNames = [
+  "BriefcaseBusiness",
+  "CarFront",
+  "HeartPulse",
+  "PiggyBank",
+  "ShoppingCart",
+  "Ticket",
+  "ToolCase",
+  "UtensilsCrossed",
+  "PawPrint",
+  "House",
+  "Gift",
+  "Dumbbell",
+  "BookOpen",
+  "BaggageClaim",
+  "Mailbox",
+  "ReceiptText",
+];

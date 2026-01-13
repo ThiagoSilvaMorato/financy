@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { NewCategoryModal } from "../NewCategoryModal";
 
 export const CategoryHeader = () => {
   return (
@@ -8,10 +7,7 @@ export const CategoryHeader = () => {
         <span className='text-2xl font-semibold'>Categorias</span>
         <span className='font-normal text-gray-500'>Organize suas transações por categorias</span>
       </div>
-      <Button onClick={() => console.log("Abrir modal de nova categoria")}>
-        <Plus />
-        Nova Categoria
-      </Button>
+      <NewCategoryModal />
     </div>
   );
 };
