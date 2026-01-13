@@ -7,3 +7,13 @@ export const extendedColorMap: Record<string, { hex: string }> = {
   orange: { hex: "#ea580b" },
   yellow: { hex: "#ca8a03" },
 };
+
+export const handleColorMap = (color: string) => {
+  const colorObj = extendedColorMap[color] ?? extendedColorMap["green"];
+  const hex = colorObj.hex;
+
+  const bgStyle = { backgroundColor: `${hex}33` };
+  const textStyle = { color: hex };
+
+  return { bgStyle, textStyle };
+};

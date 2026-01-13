@@ -1,7 +1,7 @@
 import Divider from "@/components/Divider";
 import { CircleArrowUp, CircleArrowDown } from "lucide-react";
 import type { ITransactionProps } from "./models";
-import { extendedColorMap } from "@/utils/colorMap";
+import { handleColorMap } from "@/utils/colorMap";
 import { getLucideIcon } from "@/utils/getLucideIcon";
 import { formatCurrency } from "@/utils/formatCurrency";
 
@@ -14,11 +14,7 @@ export const Transaction = ({
   color,
   category,
 }: ITransactionProps) => {
-  const colorObj = extendedColorMap[color] ?? extendedColorMap["green"];
-  const hex = colorObj.hex;
-
-  const bgStyle = { backgroundColor: `${hex}33` };
-  const textStyle = { color: hex };
+  const { bgStyle, textStyle } = handleColorMap(color);
 
   const isIncome = type === "income";
   const sign = isIncome ? "+" : "-";
