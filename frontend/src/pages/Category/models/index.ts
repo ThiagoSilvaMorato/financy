@@ -4,4 +4,5 @@ export interface CategoryModel {
   description: string;
   icon: string;
   color: string;
+  transactionsCount: number;
 }
