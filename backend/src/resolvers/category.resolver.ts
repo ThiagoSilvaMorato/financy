@@ -1,4 +1,4 @@
-import { Arg, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
+import { Arg, FieldResolver, Mutation, Query, Resolver, Root, UseMiddleware } from "type-graphql";
 import { IsAuth } from "../middleware/auth.middleware";
 import { CreateCategoryInput } from "../dto/input/category.input";
 import { CategoryService } from "../services/category.service";
@@ -47,5 +47,13 @@ export class CategoryResolver {
   @Query(() => [CategoryModel])
   async listCategories(@GqlUser() user: UserModel): Promise<CategoryModel[]> {
     return this.categoryService.listCategories(user.id);
+  }
+
+  @FieldResolver(() => Number)
+  async transactionsCount(
+    @Root() category: CategoryModel,
+    @GqlUser() user: UserModel
+  ): Promise<number> {
+    return this.categoryService.countTransactions(category.id, user.id);
   }
 }
