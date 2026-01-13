@@ -13,7 +13,12 @@ export const IconSelection = ({ value, setValue, error }: IconSelectionProps) =>
   return (
     <div className='w-full flex flex-col gap-2'>
       <Label htmlFor='icons'>Ícone</Label>
-      <div id='icons' className='grid grid-cols-8 gap-2 justify-items-center'>
+      <div
+        id='icons'
+        className={`grid grid-cols-8 gap-2 justify-items-center ${
+          error ? "border border-red-500 p-2 rounded-md" : ""
+        }`}
+      >
         {iconNames.map((iconName) => (
           <Button
             key={iconName}
@@ -25,7 +30,7 @@ export const IconSelection = ({ value, setValue, error }: IconSelectionProps) =>
           </Button>
         ))}
       </div>
-      <span>{error}</span>
+      <span className='text-sm text-red-500'>{error}</span>
     </div>
   );
 };

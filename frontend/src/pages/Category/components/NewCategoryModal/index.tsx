@@ -15,6 +15,7 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CustomInput } from "@/components/CustomInput";
 import { IconSelection } from "./components/IconSelection";
+import { ColorSelection } from "./components/ColorSelection";
 
 const validationSchema = yup.object().shape({
   title: yup.string().trim().required("Título é obrigatório"),
@@ -51,14 +52,15 @@ export const NewCategoryModal = () => {
 
   return (
     <Dialog onOpenChange={handleCloseModal}>
-      <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <DialogTrigger asChild>
-          <Button onClick={() => console.log("Abrir modal de nova categoria")}>
-            <Plus />
-            Nova Categoria
-          </Button>
-        </DialogTrigger>
-        <DialogContent>
+      <DialogTrigger asChild>
+        <Button type='button'>
+          <Plus />
+          Nova Categoria
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent>
+        <form onSubmit={handleSubmit(handleFormSubmit)}>
           <DialogHeader>
             <DialogTitle>Nova Categoria</DialogTitle>
             <DialogDescription>Organize suas transações com categorias</DialogDescription>
@@ -105,6 +107,19 @@ export const NewCategoryModal = () => {
                 />
               )}
             />
+            <Controller
+              name='color'
+              control={control}
+              render={({ field }) => (
+                <ColorSelection
+                  value={field.value}
+                  setValue={(color) => {
+                    field.onChange(color);
+                  }}
+                  error={errors.color?.message}
+                />
+              )}
+            />
           </div>
 
           <DialogFooter>
@@ -112,8 +127,8 @@ export const NewCategoryModal = () => {
               Salvar
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </form>
+        </form>
+      </DialogContent>
     </Dialog>
   );
 };
