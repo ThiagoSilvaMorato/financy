@@ -6,9 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import type { NewCategoryForm } from "./models";
 import * as yup from "yup";
@@ -17,13 +15,9 @@ import { CustomInput } from "@/components/CustomInput";
 import { IconSelection } from "./components/IconSelection";
 import { ColorSelection } from "./components/ColorSelection";
 import { toast } from "sonner";
-import { apolloClient } from "@/lib/graphql/apollo";
-import { CREATE_CATEGORY } from "@/lib/graphql/mutation/CreateCategory";
-import { useState } from "react";
-
-interface CreateCategoryMutationData {
-  createCategory: NewCategoryForm;
-}
+import { useEffect, type Dispatch, type SetStateAction } from "react";
+import { categoryService } from "../../services";
+import type { CategoryModel } from "../../models";
 
 const validationSchema = yup.object().shape({
   title: yup.string().trim().required("Título é obrigatório"),
@@ -33,17 +27,30 @@ const validationSchema = yup.object().shape({
 });
 
 interface NewCategoryModalProps {
-  onCreated?: () => Promise<void> | void;
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+  fetchData: () => Promise<void>;
+  isEdit?: boolean;
+  setIsEdit: Dispatch<SetStateAction<boolean>>;
+  categoryInfo?: NewCategoryForm;
+  setCategoryInfo: Dispatch<SetStateAction<CategoryModel | null>>;
 }
 
-export const NewCategoryModal = ({ onCreated }: NewCategoryModalProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-
+export const NewCategoryModal = ({
+  isOpen,
+  setIsOpen,
+  fetchData,
+  isEdit,
+  setIsEdit,
+  categoryInfo,
+  setCategoryInfo,
+}: NewCategoryModalProps) => {
   const {
     control,
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<NewCategoryForm>({
     defaultValues: {
       title: "",
@@ -55,55 +62,84 @@ export const NewCategoryModal = ({ onCreated }: NewCategoryModalProps) => {
   });
 
   const handleFormSubmit = async (formData: NewCategoryForm) => {
-    try {
-      const { data } = await apolloClient.mutate<
-        CreateCategoryMutationData,
-        { data: NewCategoryForm }
-      >({
-        mutation: CREATE_CATEGORY,
-        variables: {
-          data: {
-            title: formData.title,
-            description: formData.description,
-            icon: formData.icon,
-            color: formData.color,
-          },
-        },
-      });
+    console.log(isEdit, categoryInfo);
+    if (isEdit && !categoryInfo) {
+      toast.error("Informações da categoria para edição estão ausentes. Tente novamente.");
+      return;
+    }
 
-      if (data?.createCategory) {
-        toast.success("Categoria criada com sucesso!");
-        reset();
-        setIsOpen(false);
-        if (onCreated) {
-          await onCreated();
+    const payload = {
+      title: formData.title,
+      description: formData.description,
+      icon: formData.icon,
+      color: formData.color,
+    };
+
+    if (isEdit) {
+      try {
+        const { data } = await categoryService.updateCategory({
+          id: categoryInfo!.id!,
+          ...payload,
+        });
+
+        if (data?.updateCategory) {
+          toast.success("Categoria atualizada com sucesso!");
+          reset();
+          setIsOpen(false);
+          setIsEdit(false);
+          setCategoryInfo(null);
+
+          if (fetchData) {
+            await fetchData();
+          }
         }
+      } catch {
+        toast.error("Erro ao atualizar categoria.");
       }
-    } catch {
-      toast.error("Erro ao criar nova categoria.");
+    } else {
+      try {
+        const { data } = await categoryService.createCategory(payload);
+
+        if (data?.createCategory) {
+          toast.success("Categoria criada com sucesso!");
+          reset();
+          setIsOpen(false);
+
+          if (fetchData) {
+            await fetchData();
+          }
+        }
+      } catch {
+        toast.error("Erro ao criar nova categoria.");
+      }
     }
   };
 
   const handleModalOpenStateChange = (isOpen: boolean) => {
     setIsOpen(isOpen);
     if (!isOpen) {
+      setIsEdit(false);
+      setCategoryInfo(null);
       reset();
     }
   };
 
+  useEffect(() => {
+    if (isEdit && categoryInfo) {
+      setValue("title", categoryInfo.title);
+      setValue("description", categoryInfo.description);
+      setValue("icon", categoryInfo.icon);
+      setValue("color", categoryInfo.color);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
   return (
     <Dialog onOpenChange={handleModalOpenStateChange} open={isOpen}>
-      <DialogTrigger asChild>
-        <Button type='button'>
-          <Plus />
-          Nova Categoria
-        </Button>
-      </DialogTrigger>
-
       <DialogContent>
         <form onSubmit={handleSubmit(handleFormSubmit)}>
           <DialogHeader>
-            <DialogTitle>Nova Categoria</DialogTitle>
+            <DialogTitle>{isEdit ? "Editar Categoria" : "Nova Categoria"}</DialogTitle>
             <DialogDescription>Organize suas transações com categorias</DialogDescription>
           </DialogHeader>
           <div className='grid gap-4 mt-6'>
