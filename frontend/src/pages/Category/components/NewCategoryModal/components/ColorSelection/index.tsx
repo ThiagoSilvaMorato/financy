@@ -22,6 +22,7 @@ export const ColorSelection = ({ value, setValue, error }: ColorSelectionProps) 
         {colors.map((color) => (
           <Button
             key={color}
+            type='button'
             variant='outline'
             onClick={() => setValue?.(color)}
             className={`w-full p-[5px] ${value === color ? "border border-black" : ""}`}

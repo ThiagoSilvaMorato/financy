@@ -16,36 +16,39 @@ export const Categories = () => {
   const [totalTransactions, setTotalTransactions] = useState(0);
   const [mostUsedCategory, setMostUsedCategory] = useState<CategoryModel | null>(null);
 
+  const fetchData = async () => {
+    const { data } = await apolloClient.query<GetCategoryQueryData>({
+      query: GET_CATEGORY,
+      fetchPolicy: "no-cache",
+    });
+
+    const categoriesData = data?.listCategories || [];
+
+    const total = categoriesData.reduce(
+      (sum, category) => sum + (category.transactionsCount || 0),
+      0
+    );
+
+    const most = categoriesData.reduce<CategoryModel | null>((prev, curr) => {
+      if (!prev) return curr;
+      return curr.transactionsCount > prev.transactionsCount ? curr : prev;
+    }, null);
+
+    setTotalTransactions(total);
+    setMostUsedCategory(most);
+    setCategories(categoriesData);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      const { data } = await apolloClient.query<GetCategoryQueryData>({
-        query: GET_CATEGORY,
-        fetchPolicy: "no-cache",
-      });
-
-      const categoriesData = data?.listCategories || [];
-
-      const total = categoriesData.reduce(
-        (sum, category) => sum + (category.transactionsCount || 0),
-        0
-      );
-
-      const most = categoriesData.reduce<CategoryModel | null>((prev, curr) => {
-        if (!prev) return curr;
-        return curr.transactionsCount > prev.transactionsCount ? curr : prev;
-      }, null);
-
-      setTotalTransactions(total);
-      setMostUsedCategory(most);
-      setCategories(categoriesData);
-    };
-
-    fetchData();
+    (async () => {
+      await fetchData();
+    })();
   }, []);
+
   return (
     <Page>
       <div className='flex flex-col gap-8'>
-        <CategoryHeader />
+        <CategoryHeader onCategoryCreated={fetchData} />
         <CategoryGeneralInfo
           totalCategories={categories.length}
           totalTransactions={totalTransactions}

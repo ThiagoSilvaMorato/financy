@@ -22,6 +22,7 @@ export const IconSelection = ({ value, setValue, error }: IconSelectionProps) =>
         {iconNames.map((iconName) => (
           <Button
             key={iconName}
+            type='button'
             variant={value === iconName ? "default" : "outline"}
             onClick={() => setValue?.(iconName)}
             className='w-12 h-12'

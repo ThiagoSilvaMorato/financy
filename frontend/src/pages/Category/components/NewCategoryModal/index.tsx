@@ -16,6 +16,14 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { CustomInput } from "@/components/CustomInput";
 import { IconSelection } from "./components/IconSelection";
 import { ColorSelection } from "./components/ColorSelection";
+import { toast } from "sonner";
+import { apolloClient } from "@/lib/graphql/apollo";
+import { CREATE_CATEGORY } from "@/lib/graphql/mutation/CreateCategory";
+import { useState } from "react";
+
+interface CreateCategoryMutationData {
+  createCategory: NewCategoryForm;
+}
 
 const validationSchema = yup.object().shape({
   title: yup.string().trim().required("Título é obrigatório"),
@@ -24,7 +32,13 @@ const validationSchema = yup.object().shape({
   color: yup.string().trim().required("Cor é obrigatória"),
 });
 
-export const NewCategoryModal = () => {
+interface NewCategoryModalProps {
+  onCreated?: () => Promise<void> | void;
+}
+
+export const NewCategoryModal = ({ onCreated }: NewCategoryModalProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
   const {
     control,
     handleSubmit,
@@ -40,18 +54,45 @@ export const NewCategoryModal = () => {
     resolver: yupResolver(validationSchema) as Resolver<NewCategoryForm>,
   });
 
-  const handleFormSubmit = async (data: NewCategoryForm) => {
-    console.log(data);
+  const handleFormSubmit = async (formData: NewCategoryForm) => {
+    try {
+      const { data } = await apolloClient.mutate<
+        CreateCategoryMutationData,
+        { data: NewCategoryForm }
+      >({
+        mutation: CREATE_CATEGORY,
+        variables: {
+          data: {
+            title: formData.title,
+            description: formData.description,
+            icon: formData.icon,
+            color: formData.color,
+          },
+        },
+      });
+
+      if (data?.createCategory) {
+        toast.success("Categoria criada com sucesso!");
+        reset();
+        setIsOpen(false);
+        if (onCreated) {
+          await onCreated();
+        }
+      }
+    } catch {
+      toast.error("Erro ao criar nova categoria.");
+    }
   };
 
-  const handleCloseModal = (isOpen: boolean) => {
+  const handleModalOpenStateChange = (isOpen: boolean) => {
+    setIsOpen(isOpen);
     if (!isOpen) {
       reset();
     }
   };
 
   return (
-    <Dialog onOpenChange={handleCloseModal}>
+    <Dialog onOpenChange={handleModalOpenStateChange} open={isOpen}>
       <DialogTrigger asChild>
         <Button type='button'>
           <Plus />
@@ -65,7 +106,7 @@ export const NewCategoryModal = () => {
             <DialogTitle>Nova Categoria</DialogTitle>
             <DialogDescription>Organize suas transações com categorias</DialogDescription>
           </DialogHeader>
-          <div className='grid gap-4'>
+          <div className='grid gap-4 mt-6'>
             <Controller
               name='title'
               control={control}
