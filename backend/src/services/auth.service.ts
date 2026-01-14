@@ -19,7 +19,6 @@ export class AuthService {
 
     const isPasswordValid = await comparePassword(data.password, existingUser.password);
     if (!isPasswordValid) throw new Error("E-mail ou senha inválidos.");
-    console.log(existingUser, isPasswordValid);
 
     return this.generateTokens(existingUser, data.rememberMe);
   }

@@ -62,7 +62,6 @@ export const NewCategoryModal = ({
   });
 
   const handleFormSubmit = async (formData: NewCategoryForm) => {
-    console.log(isEdit, categoryInfo);
     if (isEdit && !categoryInfo) {
       toast.error("Informações da categoria para edição estão ausentes. Tente novamente.");
       return;
