@@ -62,16 +62,25 @@ export class CategoryService {
 
   async deleteCategory(id: string, userId: string) {
     const findCategory = await prismaClient.category.findUnique({
-      where: { id, userId },
-    });
-
-    if (!findCategory) throw new Error("Categoria não encontrada.");
-
-    const category = await prismaClient.category.delete({
       where: { id },
     });
 
-    return category;
+    if (!findCategory || findCategory.userId !== userId)
+      throw new Error("Categoria não encontrada.");
+
+    await prismaClient.$transaction([
+      prismaClient.transaction.deleteMany({
+        where: {
+          categoryId: id,
+          userId: userId,
+        },
+      }),
+      prismaClient.category.delete({
+        where: { id },
+      }),
+    ]);
+
+    return findCategory;
   }
 
   async countTransactions(categoryId: string, userId: string): Promise<number> {
