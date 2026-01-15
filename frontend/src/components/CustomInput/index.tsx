@@ -10,6 +10,7 @@ export const CustomInput = ({
   setValue,
   label = "E-mail",
   icon,
+  prefix,
   type = "text",
   helperText,
   error,
@@ -23,9 +24,11 @@ export const CustomInput = ({
 
   const hasError = Boolean(error);
 
+  const paddingClass = icon && prefix ? "pl-14" : icon || prefix ? "pl-10" : null;
+
   const mergedClassName = [
     className,
-    icon ? "pl-10" : null,
+    paddingClass,
     isPassword ? "pr-10" : null,
     "h-12",
     hasError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : null,
@@ -49,6 +52,16 @@ export const CustomInput = ({
         {icon && (
           <span className='absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none'>
             {icon}
+          </span>
+        )}
+
+        {prefix && (
+          <span
+            className={`absolute ${
+              icon ? "left-10" : "left-3"
+            } top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none`}
+          >
+            {prefix}
           </span>
         )}
 

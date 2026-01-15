@@ -1,35 +1,56 @@
 import { CustomInput } from "@/components/CustomInput";
 import { CustomSelect } from "@/components/CustomSelect";
+import type { SelectOption } from "@/components/CustomSelect/models";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search } from "lucide-react";
 import { useState } from "react";
 
-export const Filter = () => {
+interface FilterProps {
+  categories: SelectOption[];
+}
+
+const monthNames = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+
+function generatePeriodOptions(months = 12) {
+  const options: SelectOption[] = [{ label: "Todos", value: "all" }];
+  const now = new Date();
+
+  for (let i = 1; i <= months; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const label = `${monthNames[d.getMonth()]} / ${d.getFullYear()}`;
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    options.push({ label, value });
+  }
+
+  return options;
+}
+
+export const Filter = ({ categories }: FilterProps) => {
   const [searchValue, setSearchValue] = useState("");
 
   const typeOptions = [
     { label: "Todos", value: "all" },
-    { label: "Entrada", value: "income" },
-    { label: "Saída", value: "expense" },
+    { label: "Receita", value: "income" },
+    { label: "Despesa", value: "expense" },
   ];
   const categoryOptions = [
     { label: "Todas", value: "all" },
-    { label: "Alimentação", value: "food" },
-    { label: "Transporte", value: "transport" },
-    { label: "Lazer", value: "leisure" },
-    { label: "Saúde", value: "health" },
-    { label: "Educação", value: "education" },
+    ...(Array.isArray(categories) ? categories : []),
   ];
-  const periodOptions = [
-    { label: "Todos", value: "all" },
-    { label: "Junho / 2025", value: "2025-06" },
-    { label: "Julho / 2025", value: "2025-07" },
-    { label: "Agosto / 2025", value: "2025-08" },
-    { label: "Setembro / 2025", value: "2025-09" },
-    { label: "Outubro / 2025", value: "2025-10" },
-    { label: "Novembro / 2025", value: "2025-11" },
-    { label: "Dezembro / 2025", value: "2025-12" },
-  ];
+  const periodOptions = generatePeriodOptions(12);
 
   return (
     <Card>

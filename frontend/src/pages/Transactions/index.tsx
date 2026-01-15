@@ -5,43 +5,53 @@ import { PaginationTable } from "@/components/PaginationTable";
 import { Card, CardContent } from "@/components/ui/card";
 import { tableColumns } from "./utils/tableColumns";
 import { useEffect, useState } from "react";
-import { apolloClient } from "@/lib/graphql/apollo";
-import { GET_TRANSACTION } from "@/lib/graphql/queries/GetTransactions";
 import type { TransactionModel } from "./models";
-
-interface GetTransactionQueryData {
-  listTransactions: TransactionModel[];
-}
+import { TransactionFormModal } from "./components/TransactionFormModal";
+import type { SelectOption } from "@/components/CustomSelect/models";
+import { fetchTransactionData } from "./utils/fetchData/Transactions";
+import { fetchCategoryData } from "./utils/fetchData/Categories";
 
 export const Transactions = () => {
   const [page, setPage] = useState(1);
   const [tableData, setTableData] = useState<TransactionModel[]>([]);
+  const [categories, setCategories] = useState<SelectOption[]>([]);
+  const [isTransactionFormModalOpen, setIsTransactionFormModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [transactionToBeEdited, setTransactionToBeEdited] = useState<TransactionModel | null>(null);
 
   useEffect(() => {
-    async function fetchData() {
-      const { data } = await apolloClient.query<GetTransactionQueryData>({
-        query: GET_TRANSACTION,
-        fetchPolicy: "no-cache",
-      });
-      setTableData(data?.listTransactions || []);
-      console.log("Fetched transactions:", data?.listTransactions);
-    }
-
-    fetchData();
+    fetchTransactionData(setTableData);
+    fetchCategoryData(setCategories);
   }, []);
+
+  const handleEditClick = (transaction: TransactionModel) => {
+    setTransactionToBeEdited(transaction);
+    setIsTransactionFormModalOpen(true);
+    setIsEditMode(true);
+  };
 
   return (
     <Page>
+      <TransactionFormModal
+        isOpen={isTransactionFormModalOpen}
+        setIsOpen={setIsTransactionFormModalOpen}
+        categories={categories}
+        fetchData={() => fetchTransactionData(setTableData)}
+        isEdit={isEditMode}
+        setIsEdit={setIsEditMode}
+        transactionInfo={transactionToBeEdited}
+        setTransactionInfo={setTransactionToBeEdited}
+      />
       <div className='space-y-6'>
-        <TransactionHeader />
-        <Filter />
+        <TransactionHeader setOpenTransactionFormModal={setIsTransactionFormModalOpen} />
+        <Filter categories={categories} />
         <Card>
           <CardContent>
             <div className='pt-4'>
               <PaginationTable
                 page={page}
                 setPage={setPage}
-                tableColumns={tableColumns()}
+                tableColumns={tableColumns(handleEditClick)}
                 data={tableData}
               />
             </div>

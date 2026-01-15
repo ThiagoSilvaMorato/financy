@@ -1,7 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import type { Dispatch, SetStateAction } from "react";
 
-export const TransactionHeader = () => {
+interface TransactionHeaderProps {
+  setOpenTransactionFormModal: Dispatch<SetStateAction<boolean>>;
+}
+
+export const TransactionHeader = ({ setOpenTransactionFormModal }: TransactionHeaderProps) => {
   return (
     <div className='flex items-center justify-between'>
       <div className='flex flex-col'>
@@ -10,7 +15,7 @@ export const TransactionHeader = () => {
           Gerencie todas as suas transações financeiras
         </span>
       </div>
-      <Button onClick={() => console.log("Abrir modal de nova transação")}>
+      <Button onClick={() => setOpenTransactionFormModal(true)}>
         <Plus />
         Nova Transação
       </Button>

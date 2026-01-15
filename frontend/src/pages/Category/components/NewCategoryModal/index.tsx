@@ -8,16 +8,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Controller, useForm, type Resolver } from "react-hook-form";
-import type { NewCategoryForm } from "./models";
+import type { NewCategoryForm, NewCategoryModalProps } from "./models";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CustomInput } from "@/components/CustomInput";
 import { IconSelection } from "./components/IconSelection";
 import { ColorSelection } from "./components/ColorSelection";
 import { toast } from "sonner";
-import { useEffect, type Dispatch, type SetStateAction } from "react";
+import { useEffect } from "react";
 import { categoryService } from "../../services";
-import type { CategoryModel } from "../../models";
 
 const validationSchema = yup.object().shape({
   title: yup.string().trim().required("Título é obrigatório"),
@@ -25,16 +24,6 @@ const validationSchema = yup.object().shape({
   icon: yup.string().trim().required("Ícone é obrigatório"),
   color: yup.string().trim().required("Cor é obrigatória"),
 });
-
-interface NewCategoryModalProps {
-  isOpen: boolean;
-  setIsOpen: Dispatch<SetStateAction<boolean>>;
-  fetchData: () => Promise<void>;
-  isEdit?: boolean;
-  setIsEdit: Dispatch<SetStateAction<boolean>>;
-  categoryInfo?: NewCategoryForm;
-  setCategoryInfo: Dispatch<SetStateAction<CategoryModel | null>>;
-}
 
 export const NewCategoryModal = ({
   isOpen,

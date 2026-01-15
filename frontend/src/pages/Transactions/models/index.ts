@@ -6,5 +6,5 @@ export interface TransactionModel {
   amount: number;
   date: string;
   category: CategoryModel;
-  type: string;
+  type: "income" | "expense";
 }

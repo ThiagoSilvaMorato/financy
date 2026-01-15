@@ -6,7 +6,10 @@ import { formatCurrency } from "@/utils/formatCurrency";
 import { Button } from "@/components/ui/button";
 import moment from "moment";
 
-export const tableColumns = () => {
+export const tableColumns = (
+  handleEditClick: (transaction: TransactionModel) => void
+  // handleDeleteClick: (transactionId: string) => void,
+) => {
   return [
     {
       accessorKey: "description",
@@ -92,13 +95,13 @@ export const tableColumns = () => {
       accessorKey: "actions",
       header: "Ações",
       align: "right",
-      render: () => {
+      render: (row: TransactionModel) => {
         return (
           <div className='flex gap-2 justify-end'>
             <Button variant='outline' size='icon' onClick={() => console.log("handleDelete")}>
               <Trash className='text-red-500' />
             </Button>
-            <Button variant='outline' size='icon' onClick={() => console.log("handleEdit")}>
+            <Button variant='outline' size='icon' onClick={() => handleEditClick(row)}>
               <Edit />
             </Button>
           </div>
