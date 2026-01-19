@@ -56,4 +56,9 @@ export class CategoryResolver {
   ): Promise<number> {
     return this.categoryService.countTransactions(category.id, user.id);
   }
+
+  @FieldResolver(() => String)
+  async totalAmount(@Root() category: CategoryModel, @GqlUser() user: UserModel): Promise<string> {
+    return this.categoryService.totalAmount(category.id, user.id);
+  }
 }

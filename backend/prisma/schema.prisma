@@ -37,6 +37,7 @@ model Category {
   updatedAt         DateTime      @updatedAt
   transactions      Transaction[]
   transactionsCount Int           @default(0)
+  totalAmount       String        @default("0")
 
   @@unique([userId, title])
 }

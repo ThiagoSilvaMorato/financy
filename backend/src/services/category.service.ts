@@ -93,4 +93,35 @@ export class CategoryService {
 
     return count;
   }
+
+  async totalAmount(categoryId: string, userId: string): Promise<string> {
+    const transactions = await prismaClient.transaction.findMany({
+      where: {
+        categoryId,
+        userId,
+      },
+      select: {
+        amount: true,
+        type: true,
+      },
+    });
+
+    if (!transactions || transactions.length === 0) return "0.00";
+
+    let total = 0;
+
+    for (const tx of transactions) {
+      const raw = (tx.amount ?? "").toString().replace(",", ".");
+      const value = parseFloat(raw);
+      if (isNaN(value)) continue;
+
+      if (tx.type === "income") {
+        total += value;
+      } else {
+        total -= value;
+      }
+    }
+
+    return total.toFixed(2);
+  }
 }

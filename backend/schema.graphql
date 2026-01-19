@@ -10,6 +10,7 @@ type CategoryModel {
   icon: String!
   id: ID!
   title: String!
+  totalAmount: String!
   transactionsCount: Float!
   updatedAt: DateTimeISO!
 }
