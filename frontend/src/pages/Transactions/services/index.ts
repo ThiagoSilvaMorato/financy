@@ -2,16 +2,22 @@ import { apolloClient } from "@/lib/graphql/apollo";
 import { CREATE_TRANSACTION } from "@/lib/graphql/mutation/CreateTransaction";
 import type { NewTransactionForm } from "../components/TransactionFormModal/models";
 import { UPDATE_TRANSACTION } from "@/lib/graphql/mutation/UpdateTransaction";
+import { DELETE_TRANSACTION } from "@/lib/graphql/mutation/DeleteTransaction";
 
-// interface DeleteTransactionMutationData {
-//   deleteTransaction: {
-//     id: string;
-//     title: string;
-//     description: string;
-//     icon: string;
-//     color: string;
-//   };
-// }
+interface DeleteTransactionMutationData {
+  deleteTransaction: {
+    id: string;
+    type: string;
+    description: string;
+    date: string;
+    amount: number;
+    category: {
+      id: string;
+      title: string;
+      description: string;
+    };
+  };
+}
 
 interface CreateTransactionMutationData {
   createTransaction: NewTransactionForm;
@@ -22,14 +28,14 @@ interface UpdateTransactionMutationData {
 }
 
 export const transactionService = {
-  // deleteTransaction: async (id: string) => {
-  //   return await apolloClient.mutate<DeleteTransactionMutationData>({
-  //     mutation: DELETE_TRANSACTION,
-  //     variables: {
-  //       deleteTransactionId: id,
-  //     },
-  //   });
-  // },
+  deleteTransaction: async (id: string) => {
+    return await apolloClient.mutate<DeleteTransactionMutationData>({
+      mutation: DELETE_TRANSACTION,
+      variables: {
+        deleteTransactionId: id,
+      },
+    });
+  },
 
   createTransaction: async (formData: NewTransactionForm) => {
     return await apolloClient.mutate<CreateTransactionMutationData, { data: NewTransactionForm }>({

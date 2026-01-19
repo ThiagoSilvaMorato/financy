@@ -10,14 +10,18 @@ import { TransactionFormModal } from "./components/TransactionFormModal";
 import type { SelectOption } from "@/components/CustomSelect/models";
 import { fetchTransactionData } from "./utils/fetchData/Transactions";
 import { fetchCategoryData } from "./utils/fetchData/Categories";
+import { ConfirmDeleteTransactionModal } from "./components/ConfirmDeleteTransactionModal";
+import { toast } from "sonner";
+import { transactionService } from "./services";
 
 export const Transactions = () => {
   const [page, setPage] = useState(1);
   const [tableData, setTableData] = useState<TransactionModel[]>([]);
   const [categories, setCategories] = useState<SelectOption[]>([]);
   const [isTransactionFormModalOpen, setIsTransactionFormModalOpen] = useState(false);
+  const [isTransactionDeleteModalOpen, setIsTransactionDeleteModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [transactionToBeEdited, setTransactionToBeEdited] = useState<TransactionModel | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<TransactionModel | null>(null);
 
   useEffect(() => {
     fetchTransactionData(setTableData);
@@ -25,9 +29,33 @@ export const Transactions = () => {
   }, []);
 
   const handleEditClick = (transaction: TransactionModel) => {
-    setTransactionToBeEdited(transaction);
+    setSelectedTransaction(transaction);
     setIsTransactionFormModalOpen(true);
     setIsEditMode(true);
+  };
+
+  const handleDeleteClick = (transaction: TransactionModel) => {
+    setSelectedTransaction(transaction);
+    setIsTransactionDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsTransactionDeleteModalOpen(false);
+    setSelectedTransaction(null);
+  };
+
+  const handleConfirmDeleteModal = async () => {
+    try {
+      const { data } = await transactionService.deleteTransaction(selectedTransaction?.id || "");
+
+      if (data?.deleteTransaction) {
+        toast.success("Transação deletada com sucesso.");
+        fetchTransactionData(setTableData);
+        handleCloseDeleteModal();
+      }
+    } catch {
+      toast.error("Erro ao deletar transação.");
+    }
   };
 
   return (
@@ -39,8 +67,14 @@ export const Transactions = () => {
         fetchData={() => fetchTransactionData(setTableData)}
         isEdit={isEditMode}
         setIsEdit={setIsEditMode}
-        transactionInfo={transactionToBeEdited}
-        setTransactionInfo={setTransactionToBeEdited}
+        transactionInfo={selectedTransaction}
+        setTransactionInfo={setSelectedTransaction}
+      />
+      <ConfirmDeleteTransactionModal
+        isOpen={isTransactionDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDeleteModal}
+        transactionTitle={selectedTransaction ? selectedTransaction.description : ""}
       />
       <div className='space-y-6'>
         <TransactionHeader setOpenTransactionFormModal={setIsTransactionFormModalOpen} />
@@ -51,7 +85,7 @@ export const Transactions = () => {
               <PaginationTable
                 page={page}
                 setPage={setPage}
-                tableColumns={tableColumns(handleEditClick)}
+                tableColumns={tableColumns(handleDeleteClick, handleEditClick)}
                 data={tableData}
               />
             </div>

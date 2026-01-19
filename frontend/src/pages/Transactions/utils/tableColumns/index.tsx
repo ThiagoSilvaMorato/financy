@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import moment from "moment";
 
 export const tableColumns = (
+  handleDeleteClick: (transaction: TransactionModel) => void,
   handleEditClick: (transaction: TransactionModel) => void
-  // handleDeleteClick: (transactionId: string) => void,
 ) => {
   return [
     {
@@ -98,7 +98,7 @@ export const tableColumns = (
       render: (row: TransactionModel) => {
         return (
           <div className='flex gap-2 justify-end'>
-            <Button variant='outline' size='icon' onClick={() => console.log("handleDelete")}>
+            <Button variant='outline' size='icon' onClick={() => handleDeleteClick(row)}>
               <Trash className='text-red-500' />
             </Button>
             <Button variant='outline' size='icon' onClick={() => handleEditClick(row)}>
