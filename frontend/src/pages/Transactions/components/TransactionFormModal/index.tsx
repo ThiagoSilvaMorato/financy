@@ -202,7 +202,7 @@ export const TransactionFormModal = ({
               render={({ field }) => (
                 <CustomSelect
                   label='Categoria'
-                  placeholder='Todas'
+                  placeholder='Selecione a categoria'
                   options={categoryOptions}
                   value={field.value ?? "select"}
                   onSelect={(value) => field.onChange(value)}

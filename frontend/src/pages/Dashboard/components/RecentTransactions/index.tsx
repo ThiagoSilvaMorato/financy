@@ -3,41 +3,9 @@ import { Card } from "@/components/ui/card";
 import { ChevronRight, Plus } from "lucide-react";
 import { Transaction } from "./Transaction";
 import { useNavigate } from "react-router";
+import type { RecentTransactionsProps } from "./models";
 
-const mockedTransactions = [
-  {
-    id: 1,
-    title: "Pagamento Salário",
-    date: "01/12/25",
-    type: "income",
-    amount: 4250.0,
-    icon: "Wallet",
-    color: "green",
-    category: "Receita",
-  },
-  {
-    id: 2,
-    title: "Compra Supermercado",
-    date: "03/12/25",
-    type: "expense",
-    amount: 180.45,
-    icon: "Utensils",
-    color: "blue",
-    category: "Alimentação",
-  },
-  {
-    id: 3,
-    title: "Posto de Gasolina",
-    date: "05/12/25",
-    type: "income",
-    amount: 300.0,
-    icon: "PiggyBank",
-    color: "purple",
-    category: "Transporte",
-  },
-];
-
-export const RecentTransactions = () => {
+export const RecentTransactions = ({ transactions }: RecentTransactionsProps) => {
   const navigate = useNavigate();
 
   return (
@@ -52,15 +20,13 @@ export const RecentTransactions = () => {
         </span>
       </div>
       <Divider />
-      {mockedTransactions.map((transaction) => (
+      {transactions.map((transaction) => (
         <Transaction
           key={transaction.id}
-          title={transaction.title}
+          title={transaction.description}
           date={transaction.date}
           type={transaction.type as "income" | "expense"}
           amount={transaction.amount}
-          icon={transaction.icon}
-          color={transaction.color}
           category={transaction.category}
         />
       ))}

@@ -4,17 +4,10 @@ import type { ITransactionProps } from "./models";
 import { handleColorMap } from "@/utils/colorMap";
 import { getLucideIcon } from "@/utils/getLucideIcon";
 import { formatCurrency } from "@/utils/formatCurrency";
+import { format } from "date-fns";
 
-export const Transaction = ({
-  icon,
-  title,
-  date,
-  type,
-  amount,
-  color,
-  category,
-}: ITransactionProps) => {
-  const { bgStyle, textStyle } = handleColorMap(color);
+export const Transaction = ({ title, date, type, amount, category }: ITransactionProps) => {
+  const { bgStyle, textStyle } = handleColorMap(category.color);
 
   const isIncome = type === "income";
   const sign = isIncome ? "+" : "-";
@@ -22,20 +15,20 @@ export const Transaction = ({
 
   return (
     <>
-      <div className='grid grid-cols-5 items-center justify-between p-4'>
-        <div className='flex items-center gap-4 col-span-3'>
+      <div className='grid grid-cols-4 min-[1169px]:grid-cols-5 items-center justify-between p-4'>
+        <div className='flex items-center gap-4 col-span-2 min-[1169px]:col-span-3'>
           <div className='h-10 w-10 flex items-center justify-center rounded-xl' style={bgStyle}>
-            <span style={textStyle}>{getLucideIcon(icon || "")}</span>
+            <span style={textStyle}>{getLucideIcon(category.icon || "")}</span>
           </div>
           <div className='flex flex-col'>
             <span>{title}</span>
-            <span className='text-gray-400'>{date}</span>
+            <span className='text-gray-400'>{format(date, "dd/MM/yyyy")}</span>
           </div>
         </div>
 
         <div className='w-auto mx-auto px-4 rounded-full' style={bgStyle}>
           <span className='text-sm' style={textStyle}>
-            {category}
+            {category.title}
           </span>
         </div>
 

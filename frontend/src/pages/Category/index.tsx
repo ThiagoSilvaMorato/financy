@@ -4,9 +4,9 @@ import { CategoryGeneralInfo } from "./components/CategoryGeneralInfo";
 import { CategoryList } from "./components/CategoryList";
 import { apolloClient } from "@/lib/graphql/apollo";
 import { useEffect, useState } from "react";
-import type { CategoryModel } from "./models";
 import { GET_CATEGORY } from "@/lib/graphql/queries/GetCategories";
 import { NewCategoryModal } from "./components/NewCategoryModal";
+import type { CategoryModel } from "@/shared/models/category";
 
 interface GetCategoryQueryData {
   listCategories: CategoryModel[];

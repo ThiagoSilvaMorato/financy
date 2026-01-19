@@ -1,8 +1,8 @@
 import { Card } from "@/components/ui/card";
+import type { CategoryModel } from "@/shared/models/category";
 import { handleColorMap } from "@/utils/colorMap";
 import { getLucideIcon } from "@/utils/getLucideIcon";
 import { ArrowUpDown, Tag } from "lucide-react";
-import type { CategoryModel } from "../../models";
 
 interface CategoryGeneralInfoProps {
   totalCategories: number;

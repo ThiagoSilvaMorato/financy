@@ -12,21 +12,21 @@ export const Category = ({ name, color, itemsAmount, totalAmount }: ICategoryPro
   const itemsText = itemsAmount === 1 ? "item" : "itens";
 
   return (
-    <div className='grid grid-cols-5 gap-4 p-4'>
+    <div className='grid grid-cols-5 gap-4'>
       <div
         style={bgStyle}
-        className='w-auto mr-auto px-4 rounded-full col-span-2 flex items-center'
+        className='w-auto mr-auto px-4 rounded-full col-span-3 flex items-center'
       >
         <span className='text-sm' style={textStyle}>
           {name}
         </span>
       </div>
-      <div className='flex items-center'>
-        <span className='text-gray-500 text-xs items-center'>
+      <div className='flex items-center col-span-2 gap-4 justify-end'>
+        <span className='text-gray-500 text-xs items-center text-right'>
           {itemsAmount} {itemsText}
         </span>
+        <span>R$ {formatCurrency(totalAmount)}</span>
       </div>
-      <span className='col-span-2'>R$ {formatCurrency(totalAmount)}</span>
     </div>
   );
 };

@@ -1,5 +1,5 @@
+import type { CategoryModel } from "@/shared/models/category";
 import { CategoryCard } from "./components/CategoryCard";
-import type { CategoryModel } from "../../models";
 import type { Dispatch, SetStateAction } from "react";
 
 interface CategoryListProps {

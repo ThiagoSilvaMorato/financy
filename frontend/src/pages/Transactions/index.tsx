@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { Page } from "@/components/Page";
 import { TransactionHeader } from "./components/TransactionHeader";
 import { Filter } from "./components/Filter";
@@ -5,19 +6,21 @@ import { PaginationTable } from "@/components/PaginationTable";
 import { Card, CardContent } from "@/components/ui/card";
 import { tableColumns } from "./utils/tableColumns";
 import { useEffect, useState } from "react";
-import type { TransactionModel } from "./models";
 import { TransactionFormModal } from "./components/TransactionFormModal";
-import type { SelectOption } from "@/components/CustomSelect/models";
 import { fetchTransactionData } from "./utils/fetchData/Transactions";
 import { fetchCategoryData } from "./utils/fetchData/Categories";
 import { ConfirmDeleteTransactionModal } from "./components/ConfirmDeleteTransactionModal";
 import { toast } from "sonner";
 import { transactionService } from "./services";
+import type { TransactionModel } from "@/shared/models/transaction";
+import type { CategoryModel } from "@/shared/models/category";
+import type { SelectOption } from "@/components/CustomSelect/models";
 
 export const Transactions = () => {
   const [page, setPage] = useState(1);
   const [tableData, setTableData] = useState<TransactionModel[]>([]);
-  const [categories, setCategories] = useState<SelectOption[]>([]);
+  const [categories, setCategories] = useState<CategoryModel[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([]);
   const [isTransactionFormModalOpen, setIsTransactionFormModalOpen] = useState(false);
   const [isTransactionDeleteModalOpen, setIsTransactionDeleteModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -27,6 +30,15 @@ export const Transactions = () => {
     fetchTransactionData(setTableData);
     fetchCategoryData(setCategories);
   }, []);
+
+  useEffect(() => {
+    const categoriesOption = categories.map((category) => ({
+      label: category.title,
+      value: category.id,
+    }));
+
+    setCategoryOptions(categoriesOption);
+  }, [categories]);
 
   const handleEditClick = (transaction: TransactionModel) => {
     setSelectedTransaction(transaction);
@@ -63,7 +75,7 @@ export const Transactions = () => {
       <TransactionFormModal
         isOpen={isTransactionFormModalOpen}
         setIsOpen={setIsTransactionFormModalOpen}
-        categories={categories}
+        categories={categoryOptions}
         fetchData={() => fetchTransactionData(setTableData)}
         isEdit={isEditMode}
         setIsEdit={setIsEditMode}
@@ -78,7 +90,7 @@ export const Transactions = () => {
       />
       <div className='space-y-6'>
         <TransactionHeader setOpenTransactionFormModal={setIsTransactionFormModalOpen} />
-        <Filter categories={categories} />
+        <Filter categories={categoryOptions} />
         <Card>
           <CardContent>
             <div className='pt-4'>

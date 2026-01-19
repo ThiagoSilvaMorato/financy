@@ -1,4 +1,4 @@
-import type { CategoryModel } from "@/pages/Category/models";
+import type { CategoryModel } from "@/shared/models/category";
 import type { Dispatch, SetStateAction } from "react";
 
 export interface NewCategoryForm {

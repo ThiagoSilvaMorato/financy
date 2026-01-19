@@ -5,4 +5,5 @@ export interface CategoryModel {
   icon: string;
   color: string;
   transactionsCount: number;
+  totalAmount: number;
 }
