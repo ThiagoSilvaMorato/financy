@@ -62,7 +62,7 @@ export const ResetPassword = () => {
 
       if (resetPasswordMutate) {
         toast.success("Senha redefinida com sucesso!");
-        navigate("/login");
+        navigate("/");
       }
     } catch {
       toast.error("Erro ao redefinir senha. Tente novamente.");

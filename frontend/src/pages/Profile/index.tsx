@@ -57,7 +57,7 @@ export const Profile = () => {
     try {
       await logout();
 
-      navigate("/login");
+      navigate("/");
     } catch {
       console.error("Erro ao sair da conta.");
     } finally {

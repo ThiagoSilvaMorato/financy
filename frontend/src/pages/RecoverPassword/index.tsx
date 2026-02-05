@@ -97,7 +97,7 @@ export const RecoverPassword = () => {
           <Button
             variant='outline'
             className='w-full mt-4 h-[48px]'
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/")}
             disabled={loading}
           >
             <LogIn size={20} className='mr-2' />

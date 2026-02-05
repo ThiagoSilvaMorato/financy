@@ -13,7 +13,7 @@ import { Categories } from "./pages/Category";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? <>{children}</> : <Navigate to='/login' replace />;
+  return isAuthenticated ? <>{children}</> : <Navigate to='/' replace />;
 }
 
 function PublicRoute({ children }: { children: ReactNode }) {
@@ -22,15 +22,23 @@ function PublicRoute({ children }: { children: ReactNode }) {
 }
 
 function App() {
+  const { isAuthenticated } = useAuthStore();
+
   return (
-    <Layout isAuthenticated={useAuthStore((state) => state.isAuthenticated)}>
+    <Layout isAuthenticated={isAuthenticated}>
       <Routes>
         <Route
-          path='/login'
+          path='/'
           element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
+            isAuthenticated ? (
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            ) : (
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            )
           }
         />
         <Route
@@ -55,15 +63,6 @@ function App() {
             <PublicRoute>
               <ResetPassword />
             </PublicRoute>
-          }
-        />
-
-        <Route
-          path='/'
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
           }
         />
         <Route

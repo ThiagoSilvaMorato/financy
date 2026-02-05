@@ -50,7 +50,7 @@ export const Signup = () => {
 
       if (signupMutate) {
         toast.success("Cadastro realizado com sucesso!");
-        navigate("/login");
+        navigate("/");
       }
     } catch {
       toast.error("Erro ao cadastrar usuário. Tente novamente.");
@@ -127,11 +127,7 @@ export const Signup = () => {
 
           <CardDescription className='text-center'>Já tem uma conta?</CardDescription>
 
-          <Button
-            variant='outline'
-            className='w-full mt-4 h-[48px]'
-            onClick={() => navigate("/login")}
-          >
+          <Button variant='outline' className='w-full mt-4 h-[48px]' onClick={() => navigate("/")}>
             <LogIn size={20} className='mr-2' />
             Fazer login
           </Button>
