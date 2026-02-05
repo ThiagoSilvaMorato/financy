@@ -19,7 +19,7 @@ export function generatePeriodOptions(months = 12) {
   const options: SelectOption[] = [{ label: "Todos", value: "all" }];
   const now = new Date();
 
-  for (let i = 1; i <= months; i++) {
+  for (let i = 0; i < months; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const label = `${monthNames[d.getMonth()]} / ${d.getFullYear()}`;
     const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
