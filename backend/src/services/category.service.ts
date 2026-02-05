@@ -111,8 +111,16 @@ export class CategoryService {
     let total = 0;
 
     for (const tx of transactions) {
-      const raw = (tx.amount ?? "").toString().replace(",", ".");
-      const value = parseFloat(raw);
+      const rawStr = String(tx.amount ?? "0").trim();
+
+      let normalized = rawStr;
+      if (rawStr.includes(".") && rawStr.includes(",")) {
+        normalized = rawStr.replace(/\./g, "").replace(",", ".");
+      } else if (rawStr.includes(",")) {
+        normalized = rawStr.replace(",", ".");
+      }
+
+      const value = parseFloat(normalized);
       if (isNaN(value)) continue;
 
       if (tx.type === "income") {
