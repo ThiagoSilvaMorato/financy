@@ -15,21 +15,7 @@ export const RecentTransactions = ({
   const [recentTransactions, setRecentTransactions] = useState<TransactionModel[]>([]);
 
   useEffect(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    const transactionList: TransactionModel[] = [];
-
-    for (const t of transactions) {
-      const d = new Date(t.date);
-      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-        transactionList.push(t);
-      }
-    }
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRecentTransactions(transactionList);
+    setRecentTransactions(transactions);
   }, [transactions]);
 
   return (

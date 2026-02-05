@@ -1,14 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { CircleArrowDown, CircleArrowUp, Wallet } from "lucide-react";
 import type { AccountInfoProps } from "./models";
-import { stringToNumber } from "@/utils/stringToNumber";
-import { formatCurrency } from "@/utils/formatCurrency";
 
-export const AccountInfo = ({ monthlyIncome, monthlyExpenses }: AccountInfoProps) => {
-  function handleTotalBalanceCalculation() {
-    return formatCurrency(stringToNumber(monthlyIncome) - stringToNumber(monthlyExpenses));
-  }
-
+export const AccountInfo = ({ totalBalance, monthlyIncome, monthlyExpenses }: AccountInfoProps) => {
   return (
     <div className='grid grid-cols-1 md:grid-cols-3 gap-4 w-full'>
       <Card className='p-6 gap-4'>
@@ -16,7 +10,7 @@ export const AccountInfo = ({ monthlyIncome, monthlyExpenses }: AccountInfoProps
           <Wallet className='h-6 w-6 text-[#9333ea]' />
           <span className='text-gray-400 text-xs'>SALDO TOTAL</span>
         </div>
-        <span className='text-3xl font-bold'>R$ {handleTotalBalanceCalculation()}</span>
+        <span className='text-3xl font-bold'>R$ {totalBalance}</span>
       </Card>
       <Card className='p-6 gap-4'>
         <div className='flex items-center gap-4 mb-4'>
