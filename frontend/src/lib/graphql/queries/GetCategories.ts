@@ -9,6 +9,7 @@ export const GET_CATEGORY = gql`
       icon
       color
       transactionsCount
+      totalAmount
     }
   }
 `;

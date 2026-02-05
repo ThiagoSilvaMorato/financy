@@ -1,13 +1,9 @@
-import { extendedColorMap } from "@/utils/colorMap";
+import { handleColorMap } from "@/utils/colorMap";
 import type { ICategoryProps } from "./models";
 import { formatCurrency } from "@/utils/formatCurrency";
 
 export const Category = ({ name, color, itemsAmount, totalAmount }: ICategoryProps) => {
-  const colorObj = extendedColorMap[color] ?? extendedColorMap["green"];
-  const hex = colorObj.hex;
-
-  const bgStyle = { backgroundColor: `${hex}33` };
-  const textStyle = { color: hex };
+  const { bgStyle, textStyle } = handleColorMap(color);
 
   const itemsText = itemsAmount === 1 ? "item" : "itens";
 
