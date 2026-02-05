@@ -15,10 +15,13 @@ import { transactionService } from "./services";
 import type { TransactionModel } from "@/shared/models/transaction";
 import type { CategoryModel } from "@/shared/models/category";
 import type { SelectOption } from "@/components/CustomSelect/models";
+import { useForm, useWatch } from "react-hook-form";
+import type { TransactionFilterModel } from "./models";
 
 export const Transactions = () => {
   const [page, setPage] = useState(1);
   const [tableData, setTableData] = useState<TransactionModel[]>([]);
+  // const [initialTransactions, setInitialTransactions] = useState<TransactionModel[]>([]);
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([]);
   const [isTransactionFormModalOpen, setIsTransactionFormModalOpen] = useState(false);
@@ -26,8 +29,27 @@ export const Transactions = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionModel | null>(null);
 
+  const { control } = useForm<TransactionFilterModel>({
+    defaultValues: {
+      description: "",
+      type: "all",
+      categoryId: "all",
+      period: "all",
+    },
+  });
+
+  const filter = useWatch({ control });
+
   useEffect(() => {
-    fetchTransactionData(setTableData);
+    // console.log({
+    //   filtered: tableData.filter((transaction) =>
+    //     transaction.description.includes(filter.description!)
+    //   ),
+    // });
+    fetchTransactionData(setTableData, filter);
+  }, [filter]);
+
+  useEffect(() => {
     fetchCategoryData(setCategories);
   }, []);
 
@@ -62,7 +84,7 @@ export const Transactions = () => {
 
       if (data?.deleteTransaction) {
         toast.success("Transação deletada com sucesso.");
-        fetchTransactionData(setTableData);
+        fetchTransactionData(setTableData, filter);
         handleCloseDeleteModal();
       }
     } catch {
@@ -76,7 +98,7 @@ export const Transactions = () => {
         isOpen={isTransactionFormModalOpen}
         setIsOpen={setIsTransactionFormModalOpen}
         categories={categoryOptions}
-        fetchData={() => fetchTransactionData(setTableData)}
+        fetchData={() => fetchTransactionData(setTableData, filter)}
         isEdit={isEditMode}
         setIsEdit={setIsEditMode}
         transactionInfo={selectedTransaction}
@@ -90,7 +112,7 @@ export const Transactions = () => {
       />
       <div className='space-y-6'>
         <TransactionHeader setOpenTransactionFormModal={setIsTransactionFormModalOpen} />
-        <Filter categories={categoryOptions} />
+        <Filter categories={categoryOptions} control={control} />
         <Card>
           <CardContent>
             <div className='pt-4'>
