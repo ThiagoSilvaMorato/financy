@@ -4,9 +4,33 @@ import { ChevronRight, Plus } from "lucide-react";
 import { Transaction } from "./Transaction";
 import { useNavigate } from "react-router";
 import type { RecentTransactionsProps } from "./models";
+import { useEffect, useState } from "react";
+import type { TransactionModel } from "@/shared/models/transaction";
 
-export const RecentTransactions = ({ transactions }: RecentTransactionsProps) => {
+export const RecentTransactions = ({
+  transactions,
+  setIsTransactionFormModalOpen,
+}: RecentTransactionsProps) => {
   const navigate = useNavigate();
+  const [recentTransactions, setRecentTransactions] = useState<TransactionModel[]>([]);
+
+  useEffect(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const transactionList: TransactionModel[] = [];
+
+    for (const t of transactions) {
+      const d = new Date(t.date);
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+        transactionList.push(t);
+      }
+    }
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRecentTransactions(transactionList);
+  }, [transactions]);
 
   return (
     <Card className='col-span-2'>
@@ -20,7 +44,7 @@ export const RecentTransactions = ({ transactions }: RecentTransactionsProps) =>
         </span>
       </div>
       <Divider />
-      {transactions.map((transaction) => (
+      {recentTransactions.map((transaction) => (
         <Transaction
           key={transaction.id}
           title={transaction.description}
@@ -33,7 +57,7 @@ export const RecentTransactions = ({ transactions }: RecentTransactionsProps) =>
       <div className='h-12 flex items-center justify-center p-4'>
         <span
           className='text-[#357d56] hover:underline cursor-pointer flex items-center'
-          onClick={() => console.log("Abrindo modal para nova transação...")}
+          onClick={() => setIsTransactionFormModalOpen(true)}
         >
           <Plus size={20} /> Nova transação
         </span>

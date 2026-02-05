@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,7 @@ import { CustomSelect } from "@/components/CustomSelect";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { toast } from "sonner";
-import { transactionService } from "../../services";
+import { transactionService } from "../../pages/Transactions/services";
 import { useEffect } from "react";
 
 const validationSchema = yup.object().shape({
@@ -36,7 +37,7 @@ export const TransactionFormModal = ({
   isOpen,
   setIsOpen,
   categories,
-  isEdit,
+  isEdit = false,
   setIsEdit,
   transactionInfo,
   setTransactionInfo,
@@ -85,8 +86,8 @@ export const TransactionFormModal = ({
           toast.success("Transação atualizada com sucesso!");
           reset();
           setIsOpen(false);
-          setIsEdit(false);
-          setTransactionInfo(null);
+          setIsEdit && setIsEdit(false);
+          setTransactionInfo && setTransactionInfo(null);
 
           if (fetchData) {
             await fetchData();
@@ -115,13 +116,12 @@ export const TransactionFormModal = ({
   const handleOpenChange = () => {
     setIsOpen(!isOpen);
     reset();
-    setIsEdit(false);
-    setTransactionInfo(null);
+    setIsEdit && setIsEdit(false);
+    setTransactionInfo && setTransactionInfo(null);
   };
 
   useEffect(() => {
     if (isEdit && transactionInfo) {
-      console.log({ date: new Date(transactionInfo.date), category: transactionInfo.category.id });
       setValue("type", transactionInfo.type);
       setValue("description", transactionInfo.description);
       setValue("date", new Date(transactionInfo.date));

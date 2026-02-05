@@ -8,7 +8,7 @@ export const Category = ({ name, color, itemsAmount, totalAmount }: ICategoryPro
   const itemsText = itemsAmount === 1 ? "item" : "itens";
 
   return (
-    <div className='grid grid-cols-5 gap-4'>
+    <div className='grid grid-cols-5 gap-4 items-center'>
       <div
         style={bgStyle}
         className='w-auto mr-auto px-4 rounded-full col-span-3 flex items-center'

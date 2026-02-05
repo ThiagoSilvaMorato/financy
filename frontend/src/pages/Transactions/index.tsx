@@ -6,7 +6,7 @@ import { PaginationTable } from "@/components/PaginationTable";
 import { Card, CardContent } from "@/components/ui/card";
 import { tableColumns } from "./utils/tableColumns";
 import { useEffect, useState } from "react";
-import { TransactionFormModal } from "./components/TransactionFormModal";
+import { TransactionFormModal } from "../../components/TransactionFormModal";
 import { fetchTransactionData } from "./utils/fetchData/Transactions";
 import { fetchCategoryData } from "./utils/fetchData/Categories";
 import { ConfirmDeleteTransactionModal } from "./components/ConfirmDeleteTransactionModal";

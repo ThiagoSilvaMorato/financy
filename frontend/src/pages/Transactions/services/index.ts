@@ -1,6 +1,6 @@
 import { apolloClient } from "@/lib/graphql/apollo";
 import { CREATE_TRANSACTION } from "@/lib/graphql/mutation/CreateTransaction";
-import type { NewTransactionForm } from "../components/TransactionFormModal/models";
+import type { NewTransactionForm } from "../../../components/TransactionFormModal/models";
 import { UPDATE_TRANSACTION } from "@/lib/graphql/mutation/UpdateTransaction";
 import { DELETE_TRANSACTION } from "@/lib/graphql/mutation/DeleteTransaction";
 
