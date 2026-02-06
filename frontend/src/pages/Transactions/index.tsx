@@ -41,11 +41,6 @@ export const Transactions = () => {
   const filter = useWatch({ control });
 
   useEffect(() => {
-    // console.log({
-    //   filtered: tableData.filter((transaction) =>
-    //     transaction.description.includes(filter.description!)
-    //   ),
-    // });
     fetchTransactionData(setTableData, filter);
   }, [filter]);
 
