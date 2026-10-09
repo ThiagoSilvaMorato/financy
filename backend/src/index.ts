@@ -11,12 +11,26 @@ import { buildContext } from "./graphql/context";
 import { CategoryResolver } from "./resolvers/category.resolver";
 import { TransactionResolver } from "./resolvers/transaction.resolver";
 
+const defaultCorsOrigins = ["http://localhost:5173", "http://localhost:5174"];
+
+function getCorsOrigins(): string[] {
+  const fromEnv = process.env.CORS_ORIGIN?.split(",").map((origin) => origin.trim()).filter(Boolean);
+  return fromEnv?.length ? fromEnv : defaultCorsOrigins;
+}
+
 async function bootstrap() {
   const app = express();
+  const corsOrigins = getCorsOrigins();
 
   app.use(
     cors({
-      origin: "http://localhost:5174",
+      origin(origin, callback) {
+        if (!origin || corsOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      },
       credentials: true,
     })
   );
@@ -68,8 +82,9 @@ async function bootstrap() {
     })
   );
 
-  app.listen({ port: 4000 }, () => {
-    console.log("🚀 Server is running on http://localhost:4000/graphql");
+  const port = Number(process.env.PORT) || 4000;
+  app.listen({ port }, () => {
+    console.log(`🚀 Server is running on port ${port}`);
   });
 }
 
