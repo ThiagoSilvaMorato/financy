@@ -16,6 +16,7 @@ export const CategoryCard = ({
   icon,
   color,
   transactionCount,
+  totalAmount,
   fetchData,
   setIsEditMode,
   setCategoryToBeEdited,
@@ -54,6 +55,7 @@ export const CategoryCard = ({
       icon,
       color,
       transactionsCount: transactionCount,
+      totalAmount,
     });
     setIsEditMode(true);
     setIsNewCategoryModalOpen(true);

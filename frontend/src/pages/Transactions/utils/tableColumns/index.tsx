@@ -1,5 +1,5 @@
 import { extendedColorMap } from "@/utils/colorMap";
-import type { TransactionModel } from "../../models";
+import type { TransactionModel } from "@/shared/models/transaction";
 import { getLucideIcon } from "@/utils/getLucideIcon";
 import { CircleArrowDown, CircleArrowUp, Edit, Trash } from "lucide-react";
 import { formatCurrency } from "@/utils/formatCurrency";

@@ -28,6 +28,7 @@ export const CategoryList = ({
           icon={category.icon}
           color={category.color}
           transactionCount={category.transactionsCount}
+          totalAmount={category.totalAmount}
           fetchData={fetchData}
           setIsEditMode={setIsEditMode}
           setCategoryToBeEdited={setCategoryToBeEdited}

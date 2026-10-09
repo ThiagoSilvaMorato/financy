@@ -8,6 +8,7 @@ export interface CategoryCardProps {
   icon: string;
   color: string;
   transactionCount: number;
+  totalAmount: number | string;
   fetchData: () => Promise<void>;
   setIsEditMode: Dispatch<SetStateAction<boolean>>;
   setCategoryToBeEdited: Dispatch<SetStateAction<CategoryModel | null>>;
