@@ -1,10 +1,24 @@
 import { prismaClient } from "../../prisma/prisma";
 import { CreateTransactionInput } from "../dto/input/transaction.input";
+import { assertEnvironmentAccess } from "../utils/environment-access";
+
+async function assertMemberBelongsToEnvironment(memberId: string, environmentId: string) {
+  const member = await prismaClient.environmentMember.findUnique({
+    where: { id: memberId },
+  });
+
+  if (!member || member.environmentId !== environmentId || member.removedAt !== null) {
+    throw new Error("Membro inválido para este ambiente.");
+  }
+}
 
 export class TransactionService {
   async createTransaction(data: CreateTransactionInput, userId: string) {
     if (data.type !== "income" && data.type !== "expense")
       throw new Error("Tipo de transação inválido.");
+
+    await assertEnvironmentAccess(data.environmentId, userId);
+    await assertMemberBelongsToEnvironment(data.memberId, data.environmentId);
 
     const transaction = await prismaClient.transaction.create({
       data: {
@@ -13,7 +27,9 @@ export class TransactionService {
         date: data.date,
         amount: data.amount,
         category: { connect: { id: data.categoryId } },
-        user: { connect: { id: userId } },
+        environment: { connect: { id: data.environmentId } },
+        member: { connect: { id: data.memberId } },
+        createdByUser: { connect: { id: userId } },
       },
     });
 
@@ -25,11 +41,14 @@ export class TransactionService {
       throw new Error("Tipo de transação inválido.");
 
     const findTransaction = await prismaClient.transaction.findUnique({
-      where: { id, userId },
+      where: { id },
     });
+    if (!findTransaction) throw new Error("Transação não encontrada.");
 
-    if (!findTransaction || findTransaction.userId !== userId)
-      throw new Error("Transação não encontrada.");
+    // environmentId vem da transação já persistida, nunca do input do client — evita mover a
+    // transação para um ambiente que o input tenha informado sem revalidação.
+    await assertEnvironmentAccess(findTransaction.environmentId, userId);
+    await assertMemberBelongsToEnvironment(data.memberId, findTransaction.environmentId);
 
     const transaction = await prismaClient.transaction.update({
       where: { id },
@@ -39,7 +58,7 @@ export class TransactionService {
         date: data.date,
         amount: data.amount,
         category: { connect: { id: data.categoryId } },
-        user: { connect: { id: userId } },
+        member: { connect: { id: data.memberId } },
       },
     });
 
@@ -50,15 +69,18 @@ export class TransactionService {
     const transaction = await prismaClient.transaction.findUnique({
       where: { id },
     });
+    if (!transaction) throw new Error("Transação não encontrada.");
 
-    if (!transaction || transaction.userId !== userId) throw new Error("Usuário não existe");
+    await assertEnvironmentAccess(transaction.environmentId, userId);
 
     return transaction;
   }
 
-  async listTransactions(userId: string) {
+  async listTransactions(environmentId: string, userId: string) {
+    await assertEnvironmentAccess(environmentId, userId);
+
     const transactions = await prismaClient.transaction.findMany({
-      where: { userId },
+      where: { environmentId },
       orderBy: { createdAt: "desc" },
     });
 
@@ -67,11 +89,11 @@ export class TransactionService {
 
   async deleteTransaction(id: string, userId: string) {
     const findTransaction = await prismaClient.transaction.findUnique({
-      where: { id, userId },
+      where: { id },
     });
+    if (!findTransaction) throw new Error("Transação não encontrada.");
 
-    if (!findTransaction || findTransaction.userId !== userId)
-      throw new Error("Transação não encontrada.");
+    await assertEnvironmentAccess(findTransaction.environmentId, userId);
 
     const transaction = await prismaClient.transaction.delete({
       where: { id },

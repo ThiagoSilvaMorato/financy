@@ -13,4 +13,7 @@ export class CreateCategoryInput {
 
   @Field(() => String)
   color!: string;
+
+  @Field(() => String)
+  environmentId!: string;
 }

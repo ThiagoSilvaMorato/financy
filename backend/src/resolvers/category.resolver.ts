@@ -45,20 +45,20 @@ export class CategoryResolver {
   }
 
   @Query(() => [CategoryModel])
-  async listCategories(@GqlUser() user: UserModel): Promise<CategoryModel[]> {
-    return this.categoryService.listCategories(user.id);
+  async listCategories(
+    @Arg("environmentId", () => String) environmentId: string,
+    @GqlUser() user: UserModel
+  ): Promise<CategoryModel[]> {
+    return this.categoryService.listCategories(environmentId, user.id);
   }
 
   @FieldResolver(() => Number)
-  async transactionsCount(
-    @Root() category: CategoryModel,
-    @GqlUser() user: UserModel
-  ): Promise<number> {
-    return this.categoryService.countTransactions(category.id, user.id);
+  async transactionsCount(@Root() category: CategoryModel): Promise<number> {
+    return this.categoryService.countTransactions(category.id);
   }
 
   @FieldResolver(() => String)
-  async totalAmount(@Root() category: CategoryModel, @GqlUser() user: UserModel): Promise<string> {
-    return this.categoryService.totalAmount(category.id, user.id);
+  async totalAmount(@Root() category: CategoryModel): Promise<string> {
+    return this.categoryService.totalAmount(category.id);
   }
 }

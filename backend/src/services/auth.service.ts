@@ -51,12 +51,28 @@ export class AuthService {
 
     const hashedPassword = await hashPassword(data.password);
 
-    const user = await prismaClient.user.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        password: hashedPassword,
-      },
+    // Todo usuário novo ganha automaticamente um Environment pessoal + EnvironmentMember
+    // (role: admin) no mesmo fluxo de cadastro — operação atômica via $transaction.
+    const user = await prismaClient.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: {
+          name: data.name,
+          email: data.email,
+          password: hashedPassword,
+        },
+      });
+
+      await tx.environment.create({
+        data: {
+          name: createdUser.name,
+          isPersonal: true,
+          members: {
+            create: { userId: createdUser.id, role: "admin" },
+          },
+        },
+      });
+
+      return createdUser;
     });
 
     return this.generateTokens(user);

@@ -18,11 +18,93 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  categories   Category[]
   transactions Transaction[]
 
   resetCode       String?
   resetCodeExpiry DateTime?
+
+  // Ambientes compartilhados
+  environmentMemberships EnvironmentMember[]
+  sentInvites            EnvironmentInvite[] @relation("EnvironmentInviteInvitedByUser")
+  receivedInvites        EnvironmentInvite[] @relation("EnvironmentInviteInvitedUser")
+
+  // Ambiente usado por padrão no login. Nulo (ou apontando para um ambiente ao qual o usuário
+  // perdeu acesso) cai de volta no ambiente pessoal — ver EnvironmentService.
+  defaultEnvironmentId String?
+  defaultEnvironment   Environment? @relation("UserDefaultEnvironment", fields: [defaultEnvironmentId], references: [id], onDelete: SetNull)
+}
+
+enum EnvironmentRole {
+  admin
+  user
+}
+
+enum EnvironmentInviteStatus {
+  pending
+  accepted
+  declined
+  expired
+}
+
+model Environment {
+  id         String   @id @default(uuid())
+  name       String
+  isPersonal Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  members      EnvironmentMember[]
+  invites      EnvironmentInvite[]
+  categories   Category[]
+  transactions Transaction[]
+
+  defaultForUsers User[] @relation("UserDefaultEnvironment")
+}
+
+// Membro real (userId preenchido, pode logar e atua conforme `role`) ou participante sem login
+// (userId nulo, só existe para atribuição de transações via `displayName`). "É participante?"
+// deve ser sempre derivado de `userId === null` em todo o código — nunca a partir de `role`.
+//
+// Exatamente um entre `userId`/`displayName` deve estar preenchido. Prisma não oferece `@@check`
+// declarativo nesta versão, então essa invariante é garantida centralizadamente no
+// EnvironmentService — qualquer escrita direta via `prismaClient.environmentMember` fora do
+// service pula essa validação.
+//
+// Saída/remoção (de membro ou participante) nunca apaga a linha, só marca `removedAt` — apagar
+// quebraria `Transaction.memberId` (histórico financeiro de quem já saiu do ambiente).
+model EnvironmentMember {
+  id            String           @id @default(uuid())
+  environmentId String
+  environment   Environment      @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role          EnvironmentRole?
+  displayName   String?
+  joinedAt      DateTime         @default(now())
+  removedAt     DateTime?
+
+  transactions Transaction[]
+
+  // Vale sobre a tabela inteira (ativos e soft-deletados); Postgres trata múltiplos NULL como
+  // distintos, então não afeta participantes. Reentrada após saída reaproveita a linha antiga
+  // (ver EnvironmentService.acceptEnvironmentInvite) em vez de tentar um create que violaria isso.
+  @@unique([environmentId, userId])
+}
+
+// Convite é só uma intenção — nada referencia EnvironmentInvite.id por FK em outra tabela, então
+// cascade/delete físico aqui é seguro (diferente de EnvironmentMember).
+model EnvironmentInvite {
+  id              String                  @id @default(uuid())
+  environmentId   String
+  environment     Environment             @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  invitedUserId   String
+  invitedUser     User                    @relation("EnvironmentInviteInvitedUser", fields: [invitedUserId], references: [id], onDelete: Cascade)
+  invitedByUserId String
+  invitedByUser   User                    @relation("EnvironmentInviteInvitedByUser", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+  role            EnvironmentRole
+  status          EnvironmentInviteStatus @default(pending)
+  expiresAt       DateTime
+  createdAt       DateTime                @default(now())
 }
 
 model Category {
@@ -31,15 +113,15 @@ model Category {
   description       String?
   icon              String
   color             String
-  userId            String
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  environmentId     String
+  environment       Environment   @relation(fields: [environmentId], references: [id], onDelete: Cascade)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   transactions      Transaction[]
   transactionsCount Int           @default(0)
   totalAmount       String        @default("0")
 
-  @@unique([userId, title])
+  @@unique([environmentId, title])
 }
 
 enum TransactionType {
@@ -48,19 +130,31 @@ enum TransactionType {
 }
 
 model Transaction {
-  id          String          @id @default(uuid())
-  type        TransactionType
-  description String?
-  date        DateTime
-  amount      String
-  categoryId  String
-  category    Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id            String            @id @default(uuid())
+  type          TransactionType
+  description   String?
+  date          DateTime
+  amount        String
+  categoryId    String
+  category      Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  environmentId String
+  environment   Environment       @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  // Quem efetivamente lançou a transação (auditoria).
+  createdBy     String
+  createdByUser User              @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  // A quem a transação é atribuída: o próprio criador, outro membro real ou um participante sem
+  // login. Precisa pertencer ao mesmo environmentId da transação — validado no TransactionService,
+  // a FK por si só não garante isso. onDelete: Restrict (nunca cascade destrutivo) porque saída/
+  // remoção de EnvironmentMember é sempre soft delete — essa FK nunca deveria ver uma deleção real
+  // fora do fluxo controlado de exclusão de ambiente inteiro (EnvironmentService.deleteEnvironment,
+  // que apaga Transaction antes de EnvironmentMember, na mesma $transaction).
+  memberId      String
+  member        EnvironmentMember @relation(fields: [memberId], references: [id], onDelete: Restrict)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   // índices úteis
   @@index([date])
-  @@index([userId])
+  @@index([environmentId])
+  @@index([memberId])
 }

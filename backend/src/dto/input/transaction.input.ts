@@ -17,4 +17,10 @@ export class CreateTransactionInput {
 
   @Field(() => String)
   categoryId!: string;
+
+  @Field(() => String)
+  environmentId!: string;
+
+  @Field(() => String)
+  memberId!: string;
 }

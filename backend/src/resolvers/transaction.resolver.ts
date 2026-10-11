@@ -7,6 +7,8 @@ import { UserModel } from "../models/user.model";
 import { TransactionModel } from "../models/transaction.model";
 import { TransactionService } from "../services/transaction.service";
 import { CreateTransactionInput } from "../dto/input/transaction.input";
+import { EnvironmentMemberModel } from "../models/environment-member.model";
+import { prismaClient } from "../../prisma/prisma";
 
 @Resolver(() => TransactionModel)
 @UseMiddleware(IsAuth)
@@ -48,8 +50,11 @@ export class TransactionResolver {
   }
 
   @Query(() => [TransactionModel])
-  async listTransactions(@GqlUser() user: UserModel): Promise<TransactionModel[]> {
-    return this.transactionService.listTransactions(user.id);
+  async listTransactions(
+    @Arg("environmentId", () => String) environmentId: string,
+    @GqlUser() user: UserModel
+  ): Promise<TransactionModel[]> {
+    return this.transactionService.listTransactions(environmentId, user.id);
   }
 
   @FieldResolver(() => CategoryModel)
@@ -58,5 +63,25 @@ export class TransactionResolver {
     @GqlUser() user: UserModel
   ): Promise<CategoryModel> {
     return this.categoryService.findCategory(transaction.categoryId, user.id);
+  }
+
+  @FieldResolver(() => EnvironmentMemberModel)
+  async member(@Root() transaction: TransactionModel): Promise<EnvironmentMemberModel> {
+    const member = await prismaClient.environmentMember.findUnique({
+      where: { id: transaction.memberId },
+    });
+    if (!member) throw new Error("Membro não encontrado.");
+
+    return member;
+  }
+
+  @FieldResolver(() => UserModel, { name: "createdBy" })
+  async createdByUser(@Root() transaction: TransactionModel): Promise<UserModel> {
+    const user = await prismaClient.user.findUnique({
+      where: { id: transaction.createdBy },
+    });
+    if (!user) throw new Error("Usuário não encontrado.");
+
+    return user;
   }
 }

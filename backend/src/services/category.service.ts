@@ -1,10 +1,13 @@
 import { prismaClient } from "../../prisma/prisma";
 import { CreateCategoryInput } from "../dto/input/category.input";
+import { assertEnvironmentAccess } from "../utils/environment-access";
 
 export class CategoryService {
   async createCategory(data: CreateCategoryInput, userId: string) {
+    await assertEnvironmentAccess(data.environmentId, userId);
+
     const findCategory = await prismaClient.category.findUnique({
-      where: { userId_title: { userId: userId, title: data.title } },
+      where: { environmentId_title: { environmentId: data.environmentId, title: data.title } },
     });
     if (findCategory) throw new Error("Categoria já cadastrada.");
 
@@ -14,7 +17,7 @@ export class CategoryService {
         description: data.description,
         icon: data.icon,
         color: data.color,
-        userId: userId,
+        environmentId: data.environmentId,
       },
     });
 
@@ -25,15 +28,18 @@ export class CategoryService {
     const category = await prismaClient.category.findUnique({
       where: { id },
     });
+    if (!category) throw new Error("Categoria não existe");
 
-    if (!category || category.userId !== userId) throw new Error("Categoria não existe");
+    await assertEnvironmentAccess(category.environmentId, userId);
 
     return category;
   }
 
-  async listCategories(userId: string) {
+  async listCategories(environmentId: string, userId: string) {
+    await assertEnvironmentAccess(environmentId, userId);
+
     const categories = await prismaClient.category.findMany({
-      where: { userId },
+      where: { environmentId },
     });
 
     return categories;
@@ -41,10 +47,12 @@ export class CategoryService {
 
   async updateCategory(id: string, data: CreateCategoryInput, userId: string) {
     const findCategory = await prismaClient.category.findUnique({
-      where: { id, userId },
+      where: { id },
     });
-
     if (!findCategory) throw new Error("Categoria não encontrada.");
+
+    // environmentId vem da categoria já persistida, nunca do input do client.
+    await assertEnvironmentAccess(findCategory.environmentId, userId);
 
     const category = await prismaClient.category.update({
       where: { id },
@@ -53,7 +61,6 @@ export class CategoryService {
         description: data.description,
         icon: data.icon,
         color: data.color,
-        userId: userId,
       },
     });
 
@@ -64,16 +71,13 @@ export class CategoryService {
     const findCategory = await prismaClient.category.findUnique({
       where: { id },
     });
+    if (!findCategory) throw new Error("Categoria não encontrada.");
 
-    if (!findCategory || findCategory.userId !== userId)
-      throw new Error("Categoria não encontrada.");
+    await assertEnvironmentAccess(findCategory.environmentId, userId);
 
     await prismaClient.$transaction([
       prismaClient.transaction.deleteMany({
-        where: {
-          categoryId: id,
-          userId: userId,
-        },
+        where: { categoryId: id },
       }),
       prismaClient.category.delete({
         where: { id },
@@ -83,23 +87,17 @@ export class CategoryService {
     return findCategory;
   }
 
-  async countTransactions(categoryId: string, userId: string): Promise<number> {
+  async countTransactions(categoryId: string): Promise<number> {
     const count = await prismaClient.transaction.count({
-      where: {
-        categoryId: categoryId,
-        userId: userId,
-      },
+      where: { categoryId },
     });
 
     return count;
   }
 
-  async totalAmount(categoryId: string, userId: string): Promise<string> {
+  async totalAmount(categoryId: string): Promise<string> {
     const transactions = await prismaClient.transaction.findMany({
-      where: {
-        categoryId,
-        userId,
-      },
+      where: { categoryId },
       select: {
         amount: true,
         type: true,

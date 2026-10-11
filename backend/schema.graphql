@@ -18,8 +18,18 @@ type CategoryModel {
 input CreateCategoryInput {
   color: String!
   description: String
+  environmentId: String!
   icon: String!
   title: String!
+}
+
+input CreateEnvironmentInput {
+  name: String!
+}
+
+input CreateParticipantInput {
+  displayName: String!
+  environmentId: String!
 }
 
 input CreateTransactionInput {
@@ -27,6 +37,8 @@ input CreateTransactionInput {
   categoryId: String!
   date: DateTimeISO!
   description: String
+  environmentId: String!
+  memberId: String!
   type: String!
 }
 
@@ -39,6 +51,43 @@ input CreateUserInput {
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.This scalar is serialized to a string in ISO 8601 format and parsed from a string in ISO 8601 format.
 """
 scalar DateTimeISO
+
+type EnvironmentInviteModel {
+  createdAt: DateTimeISO!
+  environment: EnvironmentModel!
+  environmentId: String!
+  expiresAt: DateTimeISO!
+  id: ID!
+  invitedBy: UserModel!
+  role: String!
+  status: String!
+}
+
+type EnvironmentMemberModel {
+  displayName: String
+  environmentId: String!
+  id: ID!
+  joinedAt: DateTimeISO!
+  removedAt: DateTimeISO
+  role: String
+  user: UserModel
+  userId: String
+}
+
+type EnvironmentModel {
+  createdAt: DateTimeISO!
+  id: ID!
+  isPersonal: Boolean!
+  members: [EnvironmentMemberModel!]!
+  name: String!
+  updatedAt: DateTimeISO!
+}
+
+input InviteMemberInput {
+  email: String!
+  environmentId: String!
+  role: String!
+}
 
 input LoginInput {
   email: String!
@@ -53,16 +102,29 @@ type LoginOutput {
 }
 
 type Mutation {
+  acceptEnvironmentInvite(inviteId: String!): Boolean!
+  cancelEnvironmentInvite(inviteId: String!): Boolean!
   createCategory(data: CreateCategoryInput!): CategoryModel!
+  createEnvironment(data: CreateEnvironmentInput!): EnvironmentModel!
+  createParticipant(data: CreateParticipantInput!): EnvironmentMemberModel!
   createTransaction(data: CreateTransactionInput!): TransactionModel!
   createUser(data: CreateUserInput!): UserModel!
+  declineEnvironmentInvite(inviteId: String!): Boolean!
   deleteCategory(id: String!): CategoryModel!
+  deleteEnvironment(environmentId: String!): Boolean!
   deleteTransaction(id: String!): TransactionModel!
+  inviteMember(data: InviteMemberInput!): EnvironmentInviteModel!
+  leaveEnvironment(environmentId: String!, newAdminMemberId: String): Boolean!
   login(data: LoginInput!): LoginOutput!
+  promoteToAdmin(environmentId: String!, memberId: String!): EnvironmentMemberModel!
   recoverPassword(data: RecoverPasswordInput!): Boolean!
   refreshToken(data: RefreshTokenInput!): LoginOutput!
   register(data: RegisterInput!): RegisterOutput!
+  removeMember(environmentId: String!, memberId: String!): EnvironmentMemberModel!
+  removeParticipant(environmentId: String!, memberId: String!): EnvironmentMemberModel!
+  renameEnvironment(environmentId: String!, name: String!): EnvironmentModel!
   resetPassword(data: ResetPasswordInput!): Boolean!
+  setDefaultEnvironment(environmentId: String!): Boolean!
   updateCategory(data: CreateCategoryInput!, id: String!): CategoryModel!
   updateTransaction(data: CreateTransactionInput!, id: String!): TransactionModel!
   updateUser(data: CreateUserInput!): UserModel!
@@ -72,8 +134,11 @@ type Query {
   getCategoryById(id: String!): CategoryModel!
   getTransactionById(id: String!): TransactionModel!
   getUser(id: String!): UserModel!
-  listCategories: [CategoryModel!]!
-  listTransactions: [TransactionModel!]!
+  listCategories(environmentId: String!): [CategoryModel!]!
+  listEnvironmentInvites(environmentId: String!): [EnvironmentInviteModel!]!
+  listMyEnvironments: [EnvironmentModel!]!
+  listMyPendingInvites: [EnvironmentInviteModel!]!
+  listTransactions(environmentId: String!): [TransactionModel!]!
 }
 
 input RecoverPasswordInput {
@@ -108,9 +173,12 @@ type TransactionModel {
   category: CategoryModel
   categoryId: String!
   createdAt: DateTimeISO!
+  createdBy: UserModel!
   date: DateTimeISO!
   description: String
   id: ID!
+  member: EnvironmentMemberModel!
+  memberId: String!
   type: String!
   updatedAt: DateTimeISO!
 }
