@@ -52,16 +52,11 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTimeISO
 
-type EnvironmentInviteModel {
+type EnvironmentInviteCodeModel {
+  code: String!
   createdAt: DateTimeISO!
-  environment: EnvironmentModel!
   environmentId: String!
   expiresAt: DateTimeISO!
-  id: ID!
-  invitedBy: UserModel!
-  invitedUser: UserModel!
-  role: String!
-  status: String!
 }
 
 type EnvironmentMemberModel {
@@ -79,15 +74,11 @@ type EnvironmentModel {
   createdAt: DateTimeISO!
   id: ID!
   isPersonal: Boolean!
-  members: [EnvironmentMemberModel!]!
+  members: [EnvironmentMemberModel!]
+  myMembership: EnvironmentMemberModel
   name: String!
+  pendingMembers: [EnvironmentMemberModel!]
   updatedAt: DateTimeISO!
-}
-
-input InviteMemberInput {
-  email: String!
-  environmentId: String!
-  role: String!
 }
 
 input LoginInput {
@@ -103,18 +94,17 @@ type LoginOutput {
 }
 
 type Mutation {
-  acceptEnvironmentInvite(inviteId: String!): Boolean!
-  cancelEnvironmentInvite(inviteId: String!): Boolean!
+  approveMember(environmentId: String!, memberId: String!): EnvironmentMemberModel!
   createCategory(data: CreateCategoryInput!): CategoryModel!
   createEnvironment(data: CreateEnvironmentInput!): EnvironmentModel!
   createParticipant(data: CreateParticipantInput!): EnvironmentMemberModel!
   createTransaction(data: CreateTransactionInput!): TransactionModel!
   createUser(data: CreateUserInput!): UserModel!
-  declineEnvironmentInvite(inviteId: String!): Boolean!
   deleteCategory(id: String!): CategoryModel!
   deleteEnvironment(environmentId: String!): Boolean!
   deleteTransaction(id: String!): TransactionModel!
-  inviteMember(data: InviteMemberInput!): EnvironmentInviteModel!
+  generateEnvironmentInviteCode(environmentId: String!): EnvironmentInviteCodeModel!
+  joinEnvironmentByCode(code: String!): EnvironmentModel!
   leaveEnvironment(environmentId: String!, newAdminMemberId: String): Boolean!
   login(data: LoginInput!): LoginOutput!
   promoteToAdmin(environmentId: String!, memberId: String!): EnvironmentMemberModel!
@@ -133,12 +123,12 @@ type Mutation {
 
 type Query {
   getCategoryById(id: String!): CategoryModel!
+  getCurrentInviteCode(environmentId: String!): EnvironmentInviteCodeModel
+  getEnvironmentByInviteCode(code: String!): EnvironmentModel!
   getTransactionById(id: String!): TransactionModel!
   getUser(id: String!): UserModel!
   listCategories(environmentId: String!): [CategoryModel!]!
-  listEnvironmentInvites(environmentId: String!): [EnvironmentInviteModel!]!
   listMyEnvironments: [EnvironmentModel!]!
-  listMyPendingInvites: [EnvironmentInviteModel!]!
   listTransactions(environmentId: String!): [TransactionModel!]!
 }
 

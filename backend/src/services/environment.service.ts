@@ -1,23 +1,27 @@
-import { inject, singleton } from "tsyringe";
+import { Prisma } from "@prisma/client";
+import { singleton } from "tsyringe";
 import { prismaClient } from "../../prisma/prisma";
+import { CreateEnvironmentInput, CreateParticipantInput } from "../dto/input/environment.input";
 import {
-  CreateEnvironmentInput,
-  CreateParticipantInput,
-  InviteMemberInput,
-} from "../dto/input/environment.input";
-import { assertEnvironmentAccess, assertEnvironmentAdmin } from "../utils/environment-access";
-import { EmailService } from "./email.service";
+  assertEnvironmentAccess,
+  assertEnvironmentAdmin,
+  assertEnvironmentMember,
+} from "../utils/environment-access";
+import { generateInviteCode, normalizeInviteCode } from "../utils/invite-code";
 
-const INVITE_EXPIRY_MS = 1000 * 60 * 60 * 24 * 7; // 7 dias
+const INVITE_CODE_EXPIRY_MS = 1000 * 60 * 60 * 24 * 7; // 7 dias
+const INVITE_CODE_GENERATION_ATTEMPTS = 5;
 
-function assertValidRole(role: string): asserts role is "admin" | "user" {
-  if (role !== "admin" && role !== "user") throw new Error("Papel inválido.");
+function isUniqueCodeCollision(error: unknown): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002" &&
+    (error.meta?.target as string[] | undefined)?.includes("code") === true
+  );
 }
 
 @singleton()
 export class EnvironmentService {
-  constructor(@inject(EmailService) private emailService: EmailService) {}
-
   async createEnvironment(data: CreateEnvironmentInput, userId: string) {
     const environment = await prismaClient.environment.create({
       data: {
@@ -49,8 +53,20 @@ export class EnvironmentService {
   }
 
   async listActiveMembers(environmentId: string) {
+    // "pending" nunca aparece na lista geral de membros — fecha por construção a classe de bug
+    // "esqueci de filtrar pending em algum lugar que lista membros" (ex.: select de atribuição de
+    // transação no frontend). Quem precisa ver quem está pendente usa listPendingMembers (Admin only).
     return prismaClient.environmentMember.findMany({
-      where: { environmentId, removedAt: null },
+      where: { environmentId, removedAt: null, role: { not: "pending" } },
+      orderBy: { joinedAt: "asc" },
+    });
+  }
+
+  async listPendingMembers(environmentId: string, userId: string) {
+    await assertEnvironmentAdmin(environmentId, userId);
+
+    return prismaClient.environmentMember.findMany({
+      where: { environmentId, removedAt: null, role: "pending" },
       orderBy: { joinedAt: "asc" },
     });
   }
@@ -101,153 +117,117 @@ export class EnvironmentService {
     });
   }
 
-  async inviteMember(data: InviteMemberInput, userId: string) {
-    assertValidRole(data.role);
-    await assertEnvironmentAdmin(data.environmentId, userId);
+  async generateEnvironmentInviteCode(environmentId: string, userId: string) {
+    await assertEnvironmentAdmin(environmentId, userId);
 
     const environment = await prismaClient.environment.findUnique({
-      where: { id: data.environmentId },
+      where: { id: environmentId },
     });
     if (!environment) throw new Error("Ambiente não encontrado.");
     if (environment.isPersonal) {
-      throw new Error("Não é possível convidar alguém para o ambiente pessoal.");
+      throw new Error("Não é possível gerar código de convite para o ambiente pessoal.");
     }
 
-    const invitedUser = await prismaClient.user.findUnique({
-      where: { email: data.email },
-    });
-    if (!invitedUser) throw new Error("Não existe usuário cadastrado com este e-mail.");
+    const expiresAt = new Date(Date.now() + INVITE_CODE_EXPIRY_MS);
 
-    if (invitedUser.id === userId) throw new Error("Você não pode convidar a si mesmo.");
+    for (let attempt = 0; attempt < INVITE_CODE_GENERATION_ATTEMPTS; attempt++) {
+      const code = generateInviteCode();
 
-    const existingMember = await prismaClient.environmentMember.findFirst({
-      where: { environmentId: data.environmentId, userId: invitedUser.id, removedAt: null },
-    });
-    if (existingMember) throw new Error("Este usuário já é membro deste ambiente.");
+      try {
+        // Chave primária environmentId garante no máximo 1 código ativo por ambiente — gerar um
+        // novo substitui o anterior na mesma linha (nunca cria uma segunda).
+        return await prismaClient.environmentInviteCode.upsert({
+          where: { environmentId },
+          create: { environmentId, code, createdByUserId: userId, expiresAt },
+          update: { code, createdByUserId: userId, expiresAt },
+        });
+      } catch (error) {
+        // Colisão de "code" (único globalmente) com o código de outro ambiente — extremamente
+        // improvável, mas trivial de tratar: gerar outro código e tentar de novo.
+        if (isUniqueCodeCollision(error)) continue;
+        throw error;
+      }
+    }
 
-    const existingInvite = await prismaClient.environmentInvite.findFirst({
-      where: {
-        environmentId: data.environmentId,
-        invitedUserId: invitedUser.id,
-        status: "pending",
-      },
-    });
-    if (existingInvite) throw new Error("Já existe um convite pendente para este usuário.");
-
-    const inviter = await prismaClient.user.findUnique({ where: { id: userId } });
-
-    const invite = await prismaClient.environmentInvite.create({
-      data: {
-        environmentId: data.environmentId,
-        invitedUserId: invitedUser.id,
-        invitedByUserId: userId,
-        role: data.role,
-        expiresAt: new Date(Date.now() + INVITE_EXPIRY_MS),
-      },
-    });
-
-    await this.emailService.sendEnvironmentInviteEmail(
-      invitedUser.email,
-      environment.name,
-      inviter?.name ?? "Alguém"
-    );
-
-    return invite;
+    throw new Error("Não foi possível gerar um código de convite único. Tente novamente.");
   }
 
-  async cancelEnvironmentInvite(inviteId: string, userId: string) {
-    const invite = await prismaClient.environmentInvite.findUnique({
-      where: { id: inviteId },
-    });
-    if (!invite) throw new Error("Convite não encontrado.");
-
-    // environmentId vem do convite buscado no banco, nunca de um argumento separado do client.
-    await assertEnvironmentAdmin(invite.environmentId, userId);
-
-    if (invite.status !== "pending") throw new Error("Este convite não está mais pendente.");
-
-    await prismaClient.environmentInvite.delete({ where: { id: inviteId } });
-
-    return true;
-  }
-
-  async listMyPendingInvites(userId: string) {
-    return prismaClient.environmentInvite.findMany({
-      where: { invitedUserId: userId, status: "pending" },
-      orderBy: { createdAt: "desc" },
-    });
-  }
-
-  async listEnvironmentInvites(environmentId: string, userId: string) {
+  async getCurrentInviteCode(environmentId: string, userId: string) {
     await assertEnvironmentAdmin(environmentId, userId);
 
-    return prismaClient.environmentInvite.findMany({
-      where: { environmentId, status: "pending" },
-      orderBy: { createdAt: "desc" },
+    const inviteCode = await prismaClient.environmentInviteCode.findUnique({
+      where: { environmentId },
     });
+
+    // Expirado é tratado como "sem código ativo", igual a nunca ter gerado — a expiração é checada
+    // de forma lazy, sem job/cron.
+    if (!inviteCode || inviteCode.expiresAt < new Date()) return null;
+
+    return inviteCode;
   }
 
-  async acceptEnvironmentInvite(inviteId: string, userId: string) {
-    const invite = await this.findInviteForActingUser(inviteId, userId);
+  async getEnvironmentByInviteCode(code: string) {
+    const inviteCode = await this.findValidInviteCode(code);
 
-    if (invite.status !== "pending") throw new Error("Este convite não está mais pendente.");
+    const environment = await prismaClient.environment.findUnique({
+      where: { id: inviteCode.environmentId },
+    });
+    if (!environment) throw new Error("Ambiente não encontrado.");
 
-    if (invite.expiresAt < new Date()) {
-      await prismaClient.environmentInvite.update({
-        where: { id: inviteId },
-        data: { status: "expired" },
-      });
-      throw new Error("Este convite expirou.");
-    }
+    return environment;
+  }
+
+  async joinEnvironmentByCode(code: string, userId: string) {
+    const inviteCode = await this.findValidInviteCode(code);
+    const environmentId = inviteCode.environmentId;
 
     const existingMembership = await prismaClient.environmentMember.findFirst({
-      where: { environmentId: invite.environmentId, userId },
+      where: { environmentId, userId },
     });
 
+    if (existingMembership && existingMembership.removedAt === null) {
+      // Já é membro ativo (admin, user ou pending) — no-op idempotente. Sem esta checagem, reusar
+      // o código rebaixaria quem já é user/admin aprovado para pending (auto-demoção destrutiva).
+      return this.findEnvironmentOrThrow(environmentId);
+    }
+
     if (existingMembership) {
-      // Reativa a linha antiga em vez de criar uma nova — @@unique([environmentId, userId]) vale
-      // sobre a tabela inteira (ativos e soft-deletados), um create incondicional falharia aqui.
+      // Reativa a linha soft-deletada em vez de criar uma nova (@@unique([environmentId, userId])
+      // vale sobre a tabela inteira). Reentrada por código sempre volta como "pending", mesmo que
+      // o role anterior (antes de sair) fosse "user"/"admin" — postura de segurança consistente.
       await prismaClient.environmentMember.update({
         where: { id: existingMembership.id },
-        data: { role: invite.role, removedAt: null, joinedAt: new Date() },
+        data: { role: "pending", removedAt: null, joinedAt: new Date() },
       });
     } else {
       await prismaClient.environmentMember.create({
-        data: {
-          environmentId: invite.environmentId,
-          userId,
-          role: invite.role,
-        },
+        data: { environmentId, userId, role: "pending" },
       });
     }
 
-    await prismaClient.environmentInvite.update({
-      where: { id: inviteId },
-      data: { status: "accepted" },
-    });
-
-    return true;
+    return this.findEnvironmentOrThrow(environmentId);
   }
 
-  async declineEnvironmentInvite(inviteId: string, userId: string) {
-    const invite = await this.findInviteForActingUser(inviteId, userId);
+  async approveMember(environmentId: string, memberId: string, userId: string) {
+    await assertEnvironmentAdmin(environmentId, userId);
 
-    if (invite.status !== "pending") throw new Error("Este convite não está mais pendente.");
-
-    if (invite.expiresAt < new Date()) {
-      await prismaClient.environmentInvite.update({
-        where: { id: inviteId },
-        data: { status: "expired" },
-      });
-      throw new Error("Este convite expirou.");
-    }
-
-    await prismaClient.environmentInvite.update({
-      where: { id: inviteId },
-      data: { status: "declined" },
+    const target = await prismaClient.environmentMember.findUnique({
+      where: { id: memberId },
     });
 
-    return true;
+    if (
+      !target ||
+      target.environmentId !== environmentId ||
+      target.removedAt !== null ||
+      target.role !== "pending"
+    ) {
+      throw new Error("Membro não encontrado ou já aprovado.");
+    }
+
+    return prismaClient.environmentMember.update({
+      where: { id: memberId },
+      data: { role: "user" },
+    });
   }
 
   async promoteToAdmin(environmentId: string, memberId: string, userId: string) {
@@ -264,6 +244,10 @@ export class EnvironmentService {
       target.userId === null
     ) {
       throw new Error("Membro não encontrado.");
+    }
+
+    if (target.role !== "user") {
+      throw new Error("Aprove este membro antes de promovê-lo a administrador.");
     }
 
     return prismaClient.environmentMember.update({
@@ -305,7 +289,9 @@ export class EnvironmentService {
     userId: string,
     newAdminMemberId?: string | null
   ) {
-    const member = await assertEnvironmentAccess(environmentId, userId);
+    // Checagem ampla: quem está "pending" também pode sair livremente, sem razão de segurança
+    // para impedir isso.
+    const member = await assertEnvironmentMember(environmentId, userId);
 
     const totalActive = await prismaClient.environmentMember.count({
       where: { environmentId, removedAt: null },
@@ -342,6 +328,13 @@ export class EnvironmentService {
           throw new Error("Novo administrador inválido.");
         }
 
+        // Mesma guarda de promoteToAdmin: "pending" precisa ser aprovado (role: "user") antes de
+        // poder virar Admin. Sem isso, o último Admin ao sair poderia nomear alguém ainda não
+        // aprovado como sucessor, dando acesso de Admin completo a quem nunca foi vetado.
+        if (successor.role !== "user") {
+          throw new Error("Aprove este membro antes de torná-lo administrador.");
+        }
+
         await prismaClient.environmentMember.update({
           where: { id: successor.id },
           data: { role: "admin" },
@@ -366,6 +359,7 @@ export class EnvironmentService {
     if (!environment) throw new Error("Ambiente não encontrado.");
     if (environment.isPersonal) throw new Error("O ambiente pessoal não pode ser excluído.");
 
+    // Também conta quem está "pending" — é preciso aprovar ou remover antes de poder excluir.
     const activeRealMembers = await prismaClient.environmentMember.count({
       where: { environmentId, removedAt: null, userId: { not: null } },
     });
@@ -387,13 +381,27 @@ export class EnvironmentService {
     return true;
   }
 
-  private async findInviteForActingUser(inviteId: string, userId: string) {
-    const invite = await prismaClient.environmentInvite.findUnique({
-      where: { id: inviteId },
-    });
-    if (!invite || invite.invitedUserId !== userId) throw new Error("Convite não encontrado.");
+  private async findValidInviteCode(code: string) {
+    const normalizedCode = normalizeInviteCode(code);
 
-    return invite;
+    const inviteCode = await prismaClient.environmentInviteCode.findUnique({
+      where: { code: normalizedCode },
+    });
+
+    if (!inviteCode || inviteCode.expiresAt < new Date()) {
+      throw new Error("Código de convite inválido ou expirado.");
+    }
+
+    return inviteCode;
+  }
+
+  private async findEnvironmentOrThrow(environmentId: string) {
+    const environment = await prismaClient.environment.findUnique({
+      where: { id: environmentId },
+    });
+    if (!environment) throw new Error("Ambiente não encontrado.");
+
+    return environment;
   }
 
   private async guardLastAdmin(

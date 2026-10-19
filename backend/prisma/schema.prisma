@@ -25,8 +25,7 @@ model User {
 
   // Ambientes compartilhados
   environmentMemberships EnvironmentMember[]
-  sentInvites            EnvironmentInvite[] @relation("EnvironmentInviteInvitedByUser")
-  receivedInvites        EnvironmentInvite[] @relation("EnvironmentInviteInvitedUser")
+  createdInviteCodes     EnvironmentInviteCode[]
 
   // Ambiente usado por padrão no login. Nulo (ou apontando para um ambiente ao qual o usuário
   // perdeu acesso) cai de volta no ambiente pessoal — ver EnvironmentService.
@@ -34,16 +33,14 @@ model User {
   defaultEnvironment   Environment? @relation("UserDefaultEnvironment", fields: [defaultEnvironmentId], references: [id], onDelete: SetNull)
 }
 
+// "pending" é uma terceira permissão real (não um estado de convite): quem entra por código de
+// convite (EnvironmentInviteCode) começa como "pending" e só vê os próprios dados de identidade
+// até um Admin aprovar (EnvironmentService.approveMember), nunca Category/Transaction do ambiente
+// — ver assertEnvironmentAccess (bloqueia pending) vs. assertEnvironmentMember (permite pending).
 enum EnvironmentRole {
   admin
   user
-}
-
-enum EnvironmentInviteStatus {
   pending
-  accepted
-  declined
-  expired
 }
 
 model Environment {
@@ -54,7 +51,7 @@ model Environment {
   updatedAt  DateTime @updatedAt
 
   members      EnvironmentMember[]
-  invites      EnvironmentInvite[]
+  inviteCode   EnvironmentInviteCode?
   categories   Category[]
   transactions Transaction[]
 
@@ -87,24 +84,22 @@ model EnvironmentMember {
 
   // Vale sobre a tabela inteira (ativos e soft-deletados); Postgres trata múltiplos NULL como
   // distintos, então não afeta participantes. Reentrada após saída reaproveita a linha antiga
-  // (ver EnvironmentService.acceptEnvironmentInvite) em vez de tentar um create que violaria isso.
+  // (ver EnvironmentService.joinEnvironmentByCode) em vez de tentar um create que violaria isso.
   @@unique([environmentId, userId])
 }
 
-// Convite é só uma intenção — nada referencia EnvironmentInvite.id por FK em outra tabela, então
-// cascade/delete físico aqui é seguro (diferente de EnvironmentMember).
-model EnvironmentInvite {
-  id              String                  @id @default(uuid())
-  environmentId   String
-  environment     Environment             @relation(fields: [environmentId], references: [id], onDelete: Cascade)
-  invitedUserId   String
-  invitedUser     User                    @relation("EnvironmentInviteInvitedUser", fields: [invitedUserId], references: [id], onDelete: Cascade)
-  invitedByUserId String
-  invitedByUser   User                    @relation("EnvironmentInviteInvitedByUser", fields: [invitedByUserId], references: [id], onDelete: Cascade)
-  role            EnvironmentRole
-  status          EnvironmentInviteStatus @default(pending)
+// Código de convite reutilizável por ambiente (substitui o convite por e-mail da tarefa 01).
+// environmentId como chave primária garante no máximo 1 código ativo por ambiente — gerar um novo
+// é um upsert que substitui code/expiresAt/createdByUserId na mesma linha (EnvironmentService.
+// generateEnvironmentInviteCode), nunca cria uma segunda. "code" é único globalmente.
+model EnvironmentInviteCode {
+  environmentId   String      @id
+  environment     Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  code            String      @unique
+  createdByUserId String
+  createdByUser   User        @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
   expiresAt       DateTime
-  createdAt       DateTime                @default(now())
+  createdAt       DateTime    @default(now())
 }
 
 model Category {

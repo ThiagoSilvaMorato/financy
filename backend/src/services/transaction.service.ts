@@ -10,6 +10,12 @@ async function assertMemberBelongsToEnvironment(memberId: string, environmentId:
   if (!member || member.environmentId !== environmentId || member.removedAt !== null) {
     throw new Error("Membro inválido para este ambiente.");
   }
+
+  // Atribuir uma transação a alguém ainda não aprovado contradiz o propósito da aprovação.
+  // Participantes (role: null) continuam válidos como alvo — só "pending" é bloqueado.
+  if (member.role === "pending") {
+    throw new Error("Não é possível atribuir uma transação a um membro ainda não aprovado.");
+  }
 }
 
 export class TransactionService {

@@ -10,11 +10,7 @@ import { UserResolver } from "./resolvers/user.resolver";
 import { buildContext } from "./graphql/context";
 import { CategoryResolver } from "./resolvers/category.resolver";
 import { TransactionResolver } from "./resolvers/transaction.resolver";
-import {
-  EnvironmentInviteResolver,
-  EnvironmentMemberResolver,
-  EnvironmentResolver,
-} from "./resolvers/environment.resolver";
+import { EnvironmentMemberResolver, EnvironmentResolver } from "./resolvers/environment.resolver";
 
 const defaultCorsOrigins = ["http://localhost:5173", "http://localhost:5174"];
 
@@ -48,7 +44,6 @@ async function bootstrap() {
       TransactionResolver,
       EnvironmentResolver,
       EnvironmentMemberResolver,
-      EnvironmentInviteResolver,
     ],
     validate: false,
     emitSchemaFile: "./schema.graphql",

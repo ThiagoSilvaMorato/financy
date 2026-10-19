@@ -7,18 +7,6 @@ export class CreateEnvironmentInput {
 }
 
 @InputType()
-export class InviteMemberInput {
-  @Field(() => String)
-  environmentId!: string;
-
-  @Field(() => String)
-  email!: string;
-
-  @Field(() => String)
-  role!: string;
-}
-
-@InputType()
 export class CreateParticipantInput {
   @Field(() => String)
   environmentId!: string;

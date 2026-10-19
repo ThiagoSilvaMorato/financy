@@ -412,8 +412,9 @@ async function main() {
 
 async function cleanup(userIds: string[]) {
   console.log("\n-- Limpeza dos dados desta rodada (QA_CLEANUP=true) --");
-  // Deletar os Users cascateia EnvironmentMember/EnvironmentInvite/Transaction (onDelete: Cascade
-  // nessas FKs). Ambientes conjuntos sem nenhum membro restante ficam órfãos — remover explicitamente.
+  // Deletar os Users cascateia EnvironmentMember/EnvironmentInviteCode/Transaction (onDelete:
+  // Cascade nessas FKs). Ambientes conjuntos sem nenhum membro restante ficam órfãos — remover
+  // explicitamente.
   await prismaClient.user.deleteMany({ where: { id: { in: userIds } } });
   const orphanEnvs = await prismaClient.environment.findMany({
     where: { name: { startsWith: `${QA_TAG} Casa Teste` } },
@@ -422,7 +423,7 @@ async function cleanup(userIds: string[]) {
     await prismaClient.transaction.deleteMany({ where: { environmentId: env.id } });
     await prismaClient.category.deleteMany({ where: { environmentId: env.id } });
     await prismaClient.environmentMember.deleteMany({ where: { environmentId: env.id } });
-    await prismaClient.environmentInvite.deleteMany({ where: { environmentId: env.id } });
+    await prismaClient.environmentInviteCode.deleteMany({ where: { environmentId: env.id } });
     await prismaClient.environment.delete({ where: { id: env.id } });
   }
   console.log(`Removidos: ${userIds.length} usuários de teste, ${orphanEnvs.length} ambiente(s) órfão(s).`);

@@ -66,11 +66,11 @@ async function main() {
     await prismaClient.transaction.deleteMany({ where: { environmentId: env.id } });
     await prismaClient.category.deleteMany({ where: { environmentId: env.id } });
     await prismaClient.environmentMember.deleteMany({ where: { environmentId: env.id } });
-    await prismaClient.environmentInvite.deleteMany({ where: { environmentId: env.id } });
+    await prismaClient.environmentInviteCode.deleteMany({ where: { environmentId: env.id } });
     await prismaClient.environment.delete({ where: { id: env.id } });
   }
 
-  // Deletar os Users cascateia qualquer EnvironmentMember/EnvironmentInvite/Transaction que
+  // Deletar os Users cascateia qualquer EnvironmentMember/EnvironmentInviteCode/Transaction que
   // ainda reste (ex.: ambiente pessoal de um usuário de QA que não batia em nenhum critério acima
   // por algum motivo).
   await prismaClient.user.deleteMany({ where: { id: { in: qaUsers.map((u) => u.id) } } });
