@@ -17,10 +17,12 @@ import type { CategoryModel } from "@/shared/models/category";
 import type { SelectOption } from "@/components/CustomSelect/models";
 import { useForm, useWatch } from "react-hook-form";
 import type { TransactionFilterModel } from "./models";
-import { useEnvironmentStore } from "@/stores/environment";
+import { useCurrentEnvironmentRole, useEnvironmentStore } from "@/stores/environment";
+import { PendingEnvironmentNotice } from "@/components/PendingEnvironmentNotice";
 
 export const Transactions = () => {
   const currentEnvironmentId = useEnvironmentStore((state) => state.currentEnvironmentId);
+  const role = useCurrentEnvironmentRole();
   const [page, setPage] = useState(1);
   const [tableData, setTableData] = useState<TransactionModel[]>([]);
   // const [initialTransactions, setInitialTransactions] = useState<TransactionModel[]>([]);
@@ -43,12 +45,14 @@ export const Transactions = () => {
   const filter = useWatch({ control });
 
   useEffect(() => {
+    if (role === "pending") return;
     fetchTransactionData(setTableData, filter);
-  }, [filter, currentEnvironmentId]);
+  }, [filter, currentEnvironmentId, role]);
 
   useEffect(() => {
+    if (role === "pending") return;
     fetchCategoryData(setCategories);
-  }, [currentEnvironmentId]);
+  }, [currentEnvironmentId, role]);
 
   useEffect(() => {
     const categoriesOption = categories.map((category) => ({
@@ -88,6 +92,14 @@ export const Transactions = () => {
       toast.error("Erro ao deletar transação.");
     }
   };
+
+  if (role === "pending") {
+    return (
+      <Page>
+        <PendingEnvironmentNotice />
+      </Page>
+    );
+  }
 
   return (
     <Page>

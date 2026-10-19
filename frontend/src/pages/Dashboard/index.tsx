@@ -11,10 +11,12 @@ import { formatCurrency } from "@/utils/formatCurrency";
 import { TransactionFormModal } from "@/components/TransactionFormModal";
 import type { SelectOption } from "@/components/CustomSelect/models";
 import { stringToNumber } from "@/utils/stringToNumber";
-import { useEnvironmentStore } from "@/stores/environment";
+import { useCurrentEnvironmentRole, useEnvironmentStore } from "@/stores/environment";
+import { PendingEnvironmentNotice } from "@/components/PendingEnvironmentNotice";
 
 export const Dashboard = () => {
   const currentEnvironmentId = useEnvironmentStore((state) => state.currentEnvironmentId);
+  const role = useCurrentEnvironmentRole();
   const [transactions, setTransactions] = useState<TransactionModel[]>([]);
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [isTransactionFormModalOpen, setIsTransactionFormModalOpen] = useState(false);
@@ -28,8 +30,9 @@ export const Dashboard = () => {
   }, []);
 
   useEffect(() => {
+    if (role === "pending") return;
     fetchData();
-  }, [fetchData, currentEnvironmentId]);
+  }, [fetchData, currentEnvironmentId, role]);
 
   const categoryOptions = useMemo<SelectOption[]>(
     () => categories.map((c) => ({ label: c.title, value: c.id })),
@@ -63,6 +66,14 @@ export const Dashboard = () => {
   }, [transactions]);
 
   const recentTransactions = useMemo(() => transactions.slice(0, 5), [transactions]);
+
+  if (role === "pending") {
+    return (
+      <Page>
+        <PendingEnvironmentNotice />
+      </Page>
+    );
+  }
 
   return (
     <Page>

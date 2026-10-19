@@ -2,7 +2,7 @@ export interface EnvironmentMemberModel {
   id: string;
   environmentId: string;
   userId?: string | null;
-  role?: "admin" | "user" | null;
+  role?: "admin" | "user" | "pending" | null;
   displayName?: string | null;
   user?: {
     id: string;
@@ -17,30 +17,16 @@ export interface EnvironmentModel {
   id: string;
   name: string;
   isPersonal: boolean;
-  members: EnvironmentMemberModel[];
+  members?: EnvironmentMemberModel[] | null;
+  pendingMembers?: EnvironmentMemberModel[] | null;
+  myMembership?: EnvironmentMemberModel | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface EnvironmentInviteModel {
-  id: string;
+export interface EnvironmentInviteCodeModel {
   environmentId: string;
-  environment: {
-    id: string;
-    name: string;
-  };
-  invitedBy: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  invitedUser?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  role: string;
-  status: string;
+  code: string;
   expiresAt: string;
   createdAt: string;
 }

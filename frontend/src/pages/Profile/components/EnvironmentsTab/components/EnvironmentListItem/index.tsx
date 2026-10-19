@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Home, Users } from "lucide-react";
 import { useNavigate } from "react-router";
-import { useAuthStore } from "@/stores/auth";
-import { getMyEnvironmentMember } from "@/utils/getMyEnvironmentMember";
 import type { EnvironmentModel } from "@/shared/models/environment";
 
 interface EnvironmentListItemProps {
@@ -12,10 +10,9 @@ interface EnvironmentListItemProps {
 }
 
 export const EnvironmentListItem = ({ environment }: EnvironmentListItemProps) => {
-  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
-  const myRole = getMyEnvironmentMember(environment, user?.id)?.role;
+  const myRole = environment.myMembership?.role;
 
   return (
     <Card>
@@ -30,8 +27,10 @@ export const EnvironmentListItem = ({ environment }: EnvironmentListItemProps) =
             <span className='font-medium truncate'>{environment.name}</span>
             <div className='flex items-center gap-2 mt-1'>
               {environment.isPersonal && <Badge variant='secondary'>Pessoal</Badge>}
-              {myRole && (
-                <Badge variant='outline'>{myRole === "admin" ? "Admin" : "Membro"}</Badge>
+              {myRole === "pending" ? (
+                <Badge variant='outline'>Aguardando aprovação</Badge>
+              ) : (
+                myRole && <Badge variant='outline'>{myRole === "admin" ? "Admin" : "Membro"}</Badge>
               )}
             </div>
           </div>

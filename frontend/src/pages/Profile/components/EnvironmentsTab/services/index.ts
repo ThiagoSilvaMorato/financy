@@ -1,28 +1,18 @@
 import { apolloClient } from "@/lib/graphql/apollo";
-import { LIST_MY_PENDING_INVITES } from "@/lib/graphql/queries/Environment";
 import {
-  ACCEPT_ENVIRONMENT_INVITE,
+  GET_ENVIRONMENT_BY_INVITE_CODE,
+} from "@/lib/graphql/queries/Environment";
+import {
   CREATE_ENVIRONMENT,
-  DECLINE_ENVIRONMENT_INVITE,
+  JOIN_ENVIRONMENT_BY_CODE,
 } from "@/lib/graphql/mutation/Environment";
-import type { EnvironmentInviteModel, EnvironmentModel } from "@/shared/models/environment";
-
-interface ListMyPendingInvitesData {
-  listMyPendingInvites: EnvironmentInviteModel[];
-}
+import type { EnvironmentModel } from "@/shared/models/environment";
 
 interface CreateEnvironmentMutationData {
   createEnvironment: EnvironmentModel;
 }
 
 export const environmentsTabService = {
-  listMyPendingInvites: async () => {
-    return await apolloClient.query<ListMyPendingInvitesData>({
-      query: LIST_MY_PENDING_INVITES,
-      fetchPolicy: "no-cache",
-    });
-  },
-
   createEnvironment: async (name: string) => {
     return await apolloClient.mutate<
       CreateEnvironmentMutationData,
@@ -33,17 +23,18 @@ export const environmentsTabService = {
     });
   },
 
-  acceptEnvironmentInvite: async (inviteId: string) => {
-    return await apolloClient.mutate<{ acceptEnvironmentInvite: boolean }>({
-      mutation: ACCEPT_ENVIRONMENT_INVITE,
-      variables: { inviteId },
+  getEnvironmentByInviteCode: async (code: string) => {
+    return await apolloClient.query<{ getEnvironmentByInviteCode: EnvironmentModel }>({
+      query: GET_ENVIRONMENT_BY_INVITE_CODE,
+      variables: { code },
+      fetchPolicy: "no-cache",
     });
   },
 
-  declineEnvironmentInvite: async (inviteId: string) => {
-    return await apolloClient.mutate<{ declineEnvironmentInvite: boolean }>({
-      mutation: DECLINE_ENVIRONMENT_INVITE,
-      variables: { inviteId },
+  joinEnvironmentByCode: async (code: string) => {
+    return await apolloClient.mutate<{ joinEnvironmentByCode: EnvironmentModel }>({
+      mutation: JOIN_ENVIRONMENT_BY_CODE,
+      variables: { code },
     });
   },
 };

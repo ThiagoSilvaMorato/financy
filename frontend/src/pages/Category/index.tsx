@@ -6,7 +6,8 @@ import { apolloClient } from "@/lib/graphql/apollo";
 import { useEffect, useState } from "react";
 import { GET_CATEGORY } from "@/lib/graphql/queries/GetCategories";
 import { NewCategoryModal } from "./components/NewCategoryModal";
-import { useEnvironmentStore } from "@/stores/environment";
+import { useCurrentEnvironmentRole, useEnvironmentStore } from "@/stores/environment";
+import { PendingEnvironmentNotice } from "@/components/PendingEnvironmentNotice";
 import type { CategoryModel } from "@/shared/models/category";
 
 interface GetCategoryQueryData {
@@ -15,6 +16,7 @@ interface GetCategoryQueryData {
 
 export const Categories = () => {
   const currentEnvironmentId = useEnvironmentStore((state) => state.currentEnvironmentId);
+  const role = useCurrentEnvironmentRole();
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [totalTransactions, setTotalTransactions] = useState(0);
   const [mostUsedCategory, setMostUsedCategory] = useState<CategoryModel | null>(null);
@@ -49,11 +51,21 @@ export const Categories = () => {
   };
 
   useEffect(() => {
+    if (role === "pending") return;
+
     (async () => {
       await fetchData();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentEnvironmentId]);
+  }, [currentEnvironmentId, role]);
+
+  if (role === "pending") {
+    return (
+      <Page>
+        <PendingEnvironmentNotice />
+      </Page>
+    );
+  }
 
   return (
     <Page>

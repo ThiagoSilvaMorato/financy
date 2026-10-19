@@ -1,6 +1,7 @@
 import { Check, ChevronDown, Home, Users } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useEnvironmentStore } from "@/stores/environment";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -53,6 +54,11 @@ export const EnvironmentSwitcher = () => {
                   <Users className='size-4 shrink-0' />
                 )}
                 <span className='truncate'>{environment.name}</span>
+                {environment.myMembership?.role === "pending" && (
+                  <Badge variant='outline' className='shrink-0'>
+                    Aguardando aprovação
+                  </Badge>
+                )}
               </span>
               {environment.id === currentEnvironmentId && (
                 <Check className='size-4 shrink-0 text-primary' />

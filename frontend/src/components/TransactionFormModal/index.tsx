@@ -21,8 +21,6 @@ import { toast } from "sonner";
 import { transactionService } from "../../pages/Transactions/services";
 import { useEffect, useMemo } from "react";
 import { useEnvironmentStore } from "@/stores/environment";
-import { useAuthStore } from "@/stores/auth";
-import { getMyEnvironmentMember } from "@/utils/getMyEnvironmentMember";
 
 const validationSchema = yup.object().shape({
   type: yup.string().oneOf(["income", "expense"]).required("Tipo é obrigatório"),
@@ -51,7 +49,6 @@ export const TransactionFormModal = ({
   setTransactionInfo,
   fetchData,
 }: TransactionFormModalProps) => {
-  const user = useAuthStore((state) => state.user);
   const { environments, currentEnvironmentId } = useEnvironmentStore();
 
   const currentEnvironment = useMemo(
@@ -72,10 +69,7 @@ export const TransactionFormModal = ({
     [currentEnvironment]
   );
 
-  const myMemberId = useMemo(
-    () => getMyEnvironmentMember(currentEnvironment, user?.id)?.id,
-    [currentEnvironment, user?.id]
-  );
+  const myMemberId = currentEnvironment?.myMembership?.id;
 
   const categoryOptions = [
     { label: "Selecione a categoria", value: "select", disabled: true },

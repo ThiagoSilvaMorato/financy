@@ -55,10 +55,15 @@ const errorLink = onError((error) => {
     });
   }
 
-  if (graphQLError === "Você não tem acesso a este ambiente.") {
-    // Ambiente ativo ficou inacessível (removido/excluído, ou sessão em outra aba perdeu
-    // acesso). Cai para o ambiente pessoal em segundo plano; as telas que dependem de
-    // currentEnvironmentId refazem a busca sozinhas quando ele muda.
+  if (
+    graphQLError === "Você não tem acesso a este ambiente." ||
+    graphQLError === "Seu acesso a este ambiente ainda não foi aprovado por um administrador."
+  ) {
+    // Ambiente ativo ficou inacessível (removido/excluído, sessão em outra aba perdeu acesso,
+    // ou a checagem proativa de `pending` na própria tela falhou por algum motivo). Cai para o
+    // ambiente pessoal em segundo plano; as telas que dependem de currentEnvironmentId refazem a
+    // busca sozinhas quando ele muda. Rede de segurança, não o mecanismo principal — o normal é a
+    // UI tratar `pending` proativamente a partir de `myMembership` antes de disparar essas queries.
     useEnvironmentStore.getState().refreshEnvironments();
   }
 });

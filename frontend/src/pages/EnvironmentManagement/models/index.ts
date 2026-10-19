@@ -1,8 +1,3 @@
-export interface InviteMemberForm {
-  email: string;
-  role: "admin" | "user";
-}
-
 export interface CreateParticipantForm {
   displayName: string;
 }

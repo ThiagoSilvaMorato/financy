@@ -1,39 +1,30 @@
 import { Page } from "@/components/Page";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/auth";
 import { useEnvironmentStore } from "@/stores/environment";
-import { getMyEnvironmentMember } from "@/utils/getMyEnvironmentMember";
+import { PendingEnvironmentNotice } from "@/components/PendingEnvironmentNotice";
 import { environmentManagementService } from "./services";
 import { EnvironmentManagementHeader } from "./components/EnvironmentManagementHeader";
 import { MembersList } from "./components/MembersList";
 import { ParticipantsList } from "./components/ParticipantsList";
-import { InviteMemberForm } from "./components/InviteMemberForm";
-import { SentInvites } from "./components/SentInvites";
+import { InviteCodeCard } from "./components/InviteCodeCard";
+import { PendingMembersList } from "./components/PendingMembersList";
 import { RenameEnvironmentModal } from "./components/RenameEnvironmentModal";
 import { LeaveEnvironmentModal } from "./components/LeaveEnvironmentModal";
 import { DeleteEnvironmentModal } from "./components/DeleteEnvironmentModal";
-import type { EnvironmentInviteModel } from "@/shared/models/environment";
 
 export const EnvironmentManagement = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
   const { environments, refreshEnvironments } = useEnvironmentStore();
 
-  const [sentInvites, setSentInvites] = useState<EnvironmentInviteModel[]>([]);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [isLeaveOpen, setIsLeaveOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [hasCheckedAccess, setHasCheckedAccess] = useState(false);
 
   const environment = environments.find((env) => env.id === id);
-
-  const fetchSentInvites = useCallback(async (environmentId: string) => {
-    const { data } = await environmentManagementService.listEnvironmentInvites(environmentId);
-    setSentInvites(data?.listEnvironmentInvites || []);
-  }, []);
 
   useEffect(() => {
     (async () => {
@@ -51,16 +42,6 @@ export const EnvironmentManagement = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasCheckedAccess, environment]);
 
-  useEffect(() => {
-    if (!id) return;
-
-    const currentMember = getMyEnvironmentMember(environment, user?.id);
-    if (environment && currentMember?.role === "admin" && !environment.isPersonal) {
-      fetchSentInvites(id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, environment]);
-
   if (!id) return null;
 
   if (!environment) {
@@ -71,15 +52,27 @@ export const EnvironmentManagement = () => {
     );
   }
 
-  const currentMember = getMyEnvironmentMember(environment, user?.id);
-  const isAdmin = currentMember?.role === "admin";
+  // O ambiente da rota (`:id`) não é necessariamente o ambiente ativo globalmente — alguém pode
+  // ser Admin no ambiente ativo e `pending` em outro que tentou gerenciar por engano. A checagem
+  // usa sempre `myMembership` do ambiente resolvido aqui, nunca o hook do ambiente ativo.
+  if (environment.myMembership?.role === "pending") {
+    return (
+      <Page>
+        <PendingEnvironmentNotice />
+      </Page>
+    );
+  }
 
-  const activeRealMembers = environment.members.filter(
+  const isAdmin = environment.myMembership?.role === "admin";
+  const currentMemberId = environment.myMembership?.id;
+
+  const activeRealMembers = (environment.members ?? []).filter(
     (member) => member.userId && !member.removedAt
   );
-  const participants = environment.members.filter(
+  const participants = (environment.members ?? []).filter(
     (member) => !member.userId && !member.removedAt
   );
+  const pendingMembers = environment.pendingMembers ?? [];
 
   const adminsCount = activeRealMembers.filter((member) => member.role === "admin").length;
   const requiresNewAdminToLeave =
@@ -89,9 +82,6 @@ export const EnvironmentManagement = () => {
 
   const handleChanged = async () => {
     await refreshEnvironments();
-    if (isAdmin && !environment.isPersonal) {
-      await fetchSentInvites(id);
-    }
   };
 
   const handleSetDefault = async () => {
@@ -133,7 +123,7 @@ export const EnvironmentManagement = () => {
         onClose={() => setIsLeaveOpen(false)}
         onLeft={handleLeft}
         requiresNewAdmin={requiresNewAdminToLeave}
-        otherMembers={activeRealMembers.filter((member) => member.id !== currentMember?.id)}
+        otherMembers={activeRealMembers.filter((member) => member.id !== currentMemberId)}
       />
       <DeleteEnvironmentModal
         environmentId={id}
@@ -159,7 +149,7 @@ export const EnvironmentManagement = () => {
           environmentId={id}
           members={activeRealMembers}
           isAdmin={isAdmin}
-          currentMemberId={currentMember?.id}
+          currentMemberId={currentMemberId}
           onChanged={handleChanged}
         />
 
@@ -172,8 +162,12 @@ export const EnvironmentManagement = () => {
 
         {isAdmin && !environment.isPersonal && (
           <>
-            <InviteMemberForm environmentId={id} onInvited={handleChanged} />
-            <SentInvites invites={sentInvites} onChanged={handleChanged} />
+            <InviteCodeCard environmentId={id} />
+            <PendingMembersList
+              environmentId={id}
+              pendingMembers={pendingMembers}
+              onChanged={handleChanged}
+            />
           </>
         )}
       </div>

@@ -22,57 +22,44 @@ export const LIST_MY_ENVIRONMENTS = gql`
           email
         }
       }
-    }
-  }
-`;
-
-export const LIST_MY_PENDING_INVITES = gql`
-  query ListMyPendingInvites {
-    listMyPendingInvites {
-      id
-      environmentId
-      role
-      status
-      expiresAt
-      createdAt
-      environment {
+      pendingMembers {
         id
-        name
-        isPersonal
+        environmentId
+        userId
+        role
+        displayName
+        joinedAt
+        removedAt
+        user {
+          id
+          name
+          email
+        }
       }
-      invitedBy {
+      myMembership {
         id
-        name
-        email
+        role
       }
     }
   }
 `;
 
-export const LIST_ENVIRONMENT_INVITES = gql`
-  query ListEnvironmentInvites($environmentId: String!) {
-    listEnvironmentInvites(environmentId: $environmentId) {
-      id
+export const GET_CURRENT_INVITE_CODE = gql`
+  query GetCurrentInviteCode($environmentId: String!) {
+    getCurrentInviteCode(environmentId: $environmentId) {
       environmentId
-      role
-      status
+      code
       expiresAt
       createdAt
-      environment {
-        id
-        name
-        isPersonal
-      }
-      invitedBy {
-        id
-        name
-        email
-      }
-      invitedUser {
-        id
-        name
-        email
-      }
+    }
+  }
+`;
+
+export const GET_ENVIRONMENT_BY_INVITE_CODE = gql`
+  query GetEnvironmentByInviteCode($code: String!) {
+    getEnvironmentByInviteCode(code: $code) {
+      id
+      name
     }
   }
 `;

@@ -1,10 +1,10 @@
 import { apolloClient } from "@/lib/graphql/apollo";
-import { LIST_ENVIRONMENT_INVITES } from "@/lib/graphql/queries/Environment";
+import { GET_CURRENT_INVITE_CODE } from "@/lib/graphql/queries/Environment";
 import {
-  CANCEL_ENVIRONMENT_INVITE,
+  APPROVE_MEMBER,
   CREATE_PARTICIPANT,
   DELETE_ENVIRONMENT,
-  INVITE_MEMBER,
+  GENERATE_ENVIRONMENT_INVITE_CODE,
   LEAVE_ENVIRONMENT,
   PROMOTE_TO_ADMIN,
   REMOVE_MEMBER,
@@ -12,33 +12,28 @@ import {
   RENAME_ENVIRONMENT,
   SET_DEFAULT_ENVIRONMENT,
 } from "@/lib/graphql/mutation/Environment";
-import type { EnvironmentInviteModel, EnvironmentMemberModel } from "@/shared/models/environment";
-import type { InviteMemberForm } from "../models";
-
-interface ListEnvironmentInvitesData {
-  listEnvironmentInvites: EnvironmentInviteModel[];
-}
+import type { EnvironmentInviteCodeModel, EnvironmentMemberModel } from "@/shared/models/environment";
 
 export const environmentManagementService = {
-  listEnvironmentInvites: async (environmentId: string) => {
-    return await apolloClient.query<ListEnvironmentInvitesData>({
-      query: LIST_ENVIRONMENT_INVITES,
+  getCurrentInviteCode: async (environmentId: string) => {
+    return await apolloClient.query<{ getCurrentInviteCode: EnvironmentInviteCodeModel | null }>({
+      query: GET_CURRENT_INVITE_CODE,
       variables: { environmentId },
       fetchPolicy: "no-cache",
     });
   },
 
-  inviteMember: async (environmentId: string, formData: InviteMemberForm) => {
-    return await apolloClient.mutate<{ inviteMember: EnvironmentInviteModel }>({
-      mutation: INVITE_MEMBER,
-      variables: { data: { environmentId, email: formData.email, role: formData.role } },
+  generateEnvironmentInviteCode: async (environmentId: string) => {
+    return await apolloClient.mutate<{ generateEnvironmentInviteCode: EnvironmentInviteCodeModel }>({
+      mutation: GENERATE_ENVIRONMENT_INVITE_CODE,
+      variables: { environmentId },
     });
   },
 
-  cancelEnvironmentInvite: async (inviteId: string) => {
-    return await apolloClient.mutate<{ cancelEnvironmentInvite: boolean }>({
-      mutation: CANCEL_ENVIRONMENT_INVITE,
-      variables: { inviteId },
+  approveMember: async (environmentId: string, memberId: string) => {
+    return await apolloClient.mutate<{ approveMember: EnvironmentMemberModel }>({
+      mutation: APPROVE_MEMBER,
+      variables: { environmentId, memberId },
     });
   },
 

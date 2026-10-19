@@ -85,39 +85,32 @@ export const REMOVE_PARTICIPANT = gql`
   }
 `;
 
-export const INVITE_MEMBER = gql`
-  mutation InviteMember($data: InviteMemberInput!) {
-    inviteMember(data: $data) {
-      id
+export const GENERATE_ENVIRONMENT_INVITE_CODE = gql`
+  mutation GenerateEnvironmentInviteCode($environmentId: String!) {
+    generateEnvironmentInviteCode(environmentId: $environmentId) {
       environmentId
-      role
-      status
+      code
       expiresAt
       createdAt
-      invitedBy {
-        id
-        name
-        email
-      }
     }
   }
 `;
 
-export const CANCEL_ENVIRONMENT_INVITE = gql`
-  mutation CancelEnvironmentInvite($inviteId: String!) {
-    cancelEnvironmentInvite(inviteId: $inviteId)
+export const JOIN_ENVIRONMENT_BY_CODE = gql`
+  mutation JoinEnvironmentByCode($code: String!) {
+    joinEnvironmentByCode(code: $code) {
+      id
+      name
+    }
   }
 `;
 
-export const ACCEPT_ENVIRONMENT_INVITE = gql`
-  mutation AcceptEnvironmentInvite($inviteId: String!) {
-    acceptEnvironmentInvite(inviteId: $inviteId)
-  }
-`;
-
-export const DECLINE_ENVIRONMENT_INVITE = gql`
-  mutation DeclineEnvironmentInvite($inviteId: String!) {
-    declineEnvironmentInvite(inviteId: $inviteId)
+export const APPROVE_MEMBER = gql`
+  mutation ApproveMember($environmentId: String!, $memberId: String!) {
+    approveMember(environmentId: $environmentId, memberId: $memberId) {
+      id
+      role
+    }
   }
 `;
 

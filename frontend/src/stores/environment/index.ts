@@ -62,3 +62,8 @@ export const useEnvironmentStore = create<EnvironmentState>()(
     }
   )
 );
+
+export const useCurrentEnvironmentRole = () =>
+  useEnvironmentStore((state) =>
+    state.environments.find((env) => env.id === state.currentEnvironmentId)?.myMembership?.role
+  );
