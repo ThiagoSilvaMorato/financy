@@ -1,5 +1,6 @@
 import { apolloClient } from "@/lib/graphql/apollo";
 import { GET_TRANSACTION } from "@/lib/graphql/queries/GetTransactions";
+import { useEnvironmentStore } from "@/stores/environment";
 import type { Dispatch, SetStateAction } from "react";
 import type { GetTransactionQueryData } from "./models";
 import type { TransactionModel } from "@/shared/models/transaction";
@@ -9,8 +10,12 @@ export async function fetchTransactionData(
   setValue: Dispatch<SetStateAction<TransactionModel[]>>,
   filter?: TransactionFilterModel
 ) {
+  const environmentId = useEnvironmentStore.getState().currentEnvironmentId;
+  if (!environmentId) return;
+
   const { data } = await apolloClient.query<GetTransactionQueryData>({
     query: GET_TRANSACTION,
+    variables: { environmentId },
     fetchPolicy: "no-cache",
   });
 

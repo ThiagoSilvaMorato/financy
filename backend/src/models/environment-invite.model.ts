@@ -13,12 +13,16 @@ export class EnvironmentInviteModel {
   @Field(() => EnvironmentModel)
   environment?: EnvironmentModel;
 
-  // Id bruto de quem convidou. Não decorado — resolvido como UserModel pelo FieldResolver
-  // `invitedBy` em EnvironmentInviteResolver.
+  // Id bruto de quem convidou/foi convidado. Não decorados — resolvidos como UserModel pelos
+  // FieldResolvers `invitedBy`/`invitedUser` em EnvironmentInviteResolver.
   invitedByUserId!: string;
+  invitedUserId!: string;
 
   @Field(() => UserModel)
   invitedBy?: UserModel;
+
+  @Field(() => UserModel)
+  invitedUser?: UserModel;
 
   @Field(() => String)
   role!: string;

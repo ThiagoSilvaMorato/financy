@@ -3,6 +3,7 @@ import { CREATE_TRANSACTION } from "@/lib/graphql/mutation/CreateTransaction";
 import type { NewTransactionForm } from "../../../components/TransactionFormModal/models";
 import { UPDATE_TRANSACTION } from "@/lib/graphql/mutation/UpdateTransaction";
 import { DELETE_TRANSACTION } from "@/lib/graphql/mutation/DeleteTransaction";
+import { useEnvironmentStore } from "@/stores/environment";
 
 interface DeleteTransactionMutationData {
   deleteTransaction: {
@@ -27,6 +28,36 @@ interface UpdateTransactionMutationData {
   updateTransaction: NewTransactionForm;
 }
 
+interface TransactionInputVariables {
+  data: {
+    type: "income" | "expense";
+    description?: string;
+    date: Date | undefined;
+    amount: string;
+    categoryId: string;
+    memberId: string;
+    environmentId: string;
+  };
+}
+
+function buildTransactionInput(formData: NewTransactionForm): TransactionInputVariables["data"] {
+  const environmentId = useEnvironmentStore.getState().currentEnvironmentId;
+
+  if (!environmentId) {
+    throw new Error("Nenhum ambiente ativo selecionado.");
+  }
+
+  return {
+    type: formData.type,
+    description: formData.description,
+    date: formData.date,
+    amount: formData.amount,
+    categoryId: formData.categoryId,
+    memberId: formData.memberId,
+    environmentId,
+  };
+}
+
 export const transactionService = {
   deleteTransaction: async (id: string) => {
     return await apolloClient.mutate<DeleteTransactionMutationData>({
@@ -38,16 +69,13 @@ export const transactionService = {
   },
 
   createTransaction: async (formData: NewTransactionForm) => {
-    return await apolloClient.mutate<CreateTransactionMutationData, { data: NewTransactionForm }>({
+    return await apolloClient.mutate<
+      CreateTransactionMutationData,
+      TransactionInputVariables
+    >({
       mutation: CREATE_TRANSACTION,
       variables: {
-        data: {
-          type: formData.type,
-          description: formData.description,
-          date: formData.date,
-          amount: formData.amount,
-          categoryId: formData.categoryId,
-        },
+        data: buildTransactionInput(formData),
       },
     });
   },
@@ -55,17 +83,11 @@ export const transactionService = {
   updateTransaction: async (formData: NewTransactionForm) => {
     return await apolloClient.mutate<
       UpdateTransactionMutationData,
-      { data: NewTransactionForm; updateTransactionId: string }
+      TransactionInputVariables & { updateTransactionId: string }
     >({
       mutation: UPDATE_TRANSACTION,
       variables: {
-        data: {
-          type: formData.type,
-          description: formData.description,
-          date: formData.date,
-          amount: formData.amount,
-          categoryId: formData.categoryId,
-        },
+        data: buildTransactionInput(formData),
         updateTransactionId: formData.id!,
       },
     });

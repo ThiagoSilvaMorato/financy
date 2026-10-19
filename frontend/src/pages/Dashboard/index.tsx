@@ -11,8 +11,10 @@ import { formatCurrency } from "@/utils/formatCurrency";
 import { TransactionFormModal } from "@/components/TransactionFormModal";
 import type { SelectOption } from "@/components/CustomSelect/models";
 import { stringToNumber } from "@/utils/stringToNumber";
+import { useEnvironmentStore } from "@/stores/environment";
 
 export const Dashboard = () => {
+  const currentEnvironmentId = useEnvironmentStore((state) => state.currentEnvironmentId);
   const [transactions, setTransactions] = useState<TransactionModel[]>([]);
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [isTransactionFormModalOpen, setIsTransactionFormModalOpen] = useState(false);
@@ -27,7 +29,7 @@ export const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, currentEnvironmentId]);
 
   const categoryOptions = useMemo<SelectOption[]>(
     () => categories.map((c) => ({ label: c.title, value: c.id })),

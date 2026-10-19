@@ -179,9 +179,21 @@ negócio via Prisma, não bastava sozinha — faltava exercitar a resposta Graph
 campos resolvidos (`createdBy { ... }`, `member { ... }`) como um client de fato faria. Ver o
 relatório completo de QA: [01-QA-BACK-ambientes-compartilhados](../../docs/qa/01-QA-BACK-ambientes-compartilhados.md).
 
+## Atualização pós-implementação do frontend (2026-10-11)
+
+Ao implementar o plano irmão de frontend, ficou evidente uma lacuna do desenho original: a tela
+de "Convites enviados" (visão do Admin que convidou) precisa mostrar **quem foi convidado**, mas
+`EnvironmentInviteModel` só expunha `invitedBy` (quem convidou) — informação que o próprio Admin
+já sabe, sendo ele mesmo. Faltou no plano original pedir o campo simétrico.
+
+Corrigido adicionando `invitedUser` (mesmo padrão de `invitedBy`: campo bruto
+`invitedUserId` + `@Field(() => UserModel)` + `FieldResolver` em `EnvironmentInviteResolver`,
+método com o mesmo nome da propriedade). Frontend atualizado em par — ver
+[registro de implementação do frontend](../../frontend/docs/01-ambientes-compartilhados.md).
+
 ## Pendências / próximos passos
 
-- Frontend (plano irmão [01-FRONTEND-ambientes-compartilhados](../../docs/plans/01-FRONTEND-ambientes-compartilhados.md)) ainda não implementado — fora do escopo desta tarefa.
+- Frontend (plano irmão [01-FRONTEND-ambientes-compartilhados](../../docs/plans/01-FRONTEND-ambientes-compartilhados.md)) já implementado — ver registro acima.
 - A regra "login cai no ambiente pessoal se `defaultEnvironmentId` for nulo ou inacessível" é uma
   decisão de qual ambiente o frontend/sessão usa por padrão; o backend só garante o dado
   (`User.defaultEnvironmentId` com `SetNull`) e a mutation `setDefaultEnvironment` — a resolução

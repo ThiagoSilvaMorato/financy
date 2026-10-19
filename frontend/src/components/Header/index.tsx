@@ -1,6 +1,7 @@
 import { useAuthStore } from "@/stores/auth";
 import { Navigation } from "./components/Navigation";
 import { Avatar, AvatarFallback } from "../ui/avatar";
+import { EnvironmentSwitcher } from "@/components/EnvironmentSwitcher";
 import { useNavigate } from "react-router";
 export const Header = () => {
   const { user, isAuthenticated } = useAuthStore();
@@ -14,7 +15,8 @@ export const Header = () => {
             <img src='/Logo.svg' alt='Financy' className='h-8' />
           </div>
           <Navigation />
-          <div className='flex items-center gap-2'>
+          <div className='flex items-center gap-3'>
+            <EnvironmentSwitcher />
             <Avatar
               className='cursor-pointer hover:brightness-110 transition-all'
               onClick={() => navigate("/profile")}

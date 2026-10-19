@@ -17,8 +17,10 @@ import type { CategoryModel } from "@/shared/models/category";
 import type { SelectOption } from "@/components/CustomSelect/models";
 import { useForm, useWatch } from "react-hook-form";
 import type { TransactionFilterModel } from "./models";
+import { useEnvironmentStore } from "@/stores/environment";
 
 export const Transactions = () => {
+  const currentEnvironmentId = useEnvironmentStore((state) => state.currentEnvironmentId);
   const [page, setPage] = useState(1);
   const [tableData, setTableData] = useState<TransactionModel[]>([]);
   // const [initialTransactions, setInitialTransactions] = useState<TransactionModel[]>([]);
@@ -42,11 +44,11 @@ export const Transactions = () => {
 
   useEffect(() => {
     fetchTransactionData(setTableData, filter);
-  }, [filter]);
+  }, [filter, currentEnvironmentId]);
 
   useEffect(() => {
     fetchCategoryData(setCategories);
-  }, []);
+  }, [currentEnvironmentId]);
 
   useEffect(() => {
     const categoriesOption = categories.map((category) => ({

@@ -1,6 +1,7 @@
 import { ApolloClient, ApolloLink, HttpLink, InMemoryCache, Observable } from "@apollo/client";
 import { SetContextLink } from "@apollo/client/link/context";
 import { useAuthStore } from "@/stores/auth";
+import { useEnvironmentStore } from "@/stores/environment";
 import { onError } from "@apollo/client/link/error";
 import { env } from "@/env";
 
@@ -52,6 +53,13 @@ const errorLink = onError((error) => {
         })
         .catch(observer.error.bind(observer));
     });
+  }
+
+  if (graphQLError === "Você não tem acesso a este ambiente.") {
+    // Ambiente ativo ficou inacessível (removido/excluído, ou sessão em outra aba perdeu
+    // acesso). Cai para o ambiente pessoal em segundo plano; as telas que dependem de
+    // currentEnvironmentId refazem a busca sozinhas quando ele muda.
+    useEnvironmentStore.getState().refreshEnvironments();
   }
 });
 

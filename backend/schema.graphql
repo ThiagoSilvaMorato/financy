@@ -59,6 +59,7 @@ type EnvironmentInviteModel {
   expiresAt: DateTimeISO!
   id: ID!
   invitedBy: UserModel!
+  invitedUser: UserModel!
   role: String!
   status: String!
 }

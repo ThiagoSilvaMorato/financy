@@ -9,6 +9,7 @@ export interface NewTransactionForm {
   date: Date | undefined;
   amount: string;
   categoryId: string;
+  memberId: string;
 }
 
 export interface TransactionFormModalProps {

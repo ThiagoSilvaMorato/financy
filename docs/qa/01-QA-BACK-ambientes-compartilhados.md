@@ -152,6 +152,13 @@ desenvolvimento**, deixados por rodadas anteriores deste QA antes dessa polític
 foram apagados (decisão deliberada de não gastar essa limpeza agora) — rode o comando `--apply`
 acima quando for a hora.
 
+**Atualização (2026-10-11)**: o QA manual da implementação de frontend (ver
+[registro de implementação do frontend](../../frontend/docs/01-ambientes-compartilhados.md)) usou
+um padrão de e-mail diferente (`qa.algo@example.com`, em vez de `qa-<timestamp>-...@test.local`),
+porque foi feito direto contra a API em vez de usar o script documentado aqui. `qa-cleanup-all.ts`
+foi ampliado para reconhecer os dois padrões — qualquer convenção nova de QA que apareça no futuro
+deve ser adicionada ao mesmo script, em vez de confiar só num padrão fixo de e-mail.
+
 Se quiser que uma rodada específica do script principal se limpe sozinha (comportamento antigo),
 rode com a variável de ambiente `QA_CLEANUP=true`.
 

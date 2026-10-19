@@ -7,6 +7,7 @@ import { apolloClient } from "@/lib/graphql/apollo";
 import { REGISTER } from "@/lib/graphql/mutation/Register";
 import { LOGIN } from "@/lib/graphql/mutation/Login";
 import { REFRESH_TOKEN } from "@/lib/graphql/mutation/RefreshToken";
+import { useEnvironmentStore } from "@/stores/environment";
 
 type RegisterMutationData = {
   register: {
@@ -71,7 +72,6 @@ export const useAuthStore = create<AuthState>()(
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: user.role,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
               },
@@ -79,6 +79,8 @@ export const useAuthStore = create<AuthState>()(
               refreshToken,
               isAuthenticated: true,
             });
+
+            useEnvironmentStore.getState().refreshEnvironments();
             return true;
           }
 
@@ -112,7 +114,6 @@ export const useAuthStore = create<AuthState>()(
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: user.role,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
               },
@@ -120,6 +121,8 @@ export const useAuthStore = create<AuthState>()(
               refreshToken,
               isAuthenticated: true,
             });
+
+            useEnvironmentStore.getState().refreshEnvironments();
             return true;
           }
           return false;
@@ -138,9 +141,12 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
           });
 
+          useEnvironmentStore.getState().reset();
+
           if (typeof window !== "undefined" && window.localStorage) {
             try {
               window.localStorage.removeItem("auth-storage");
+              window.localStorage.removeItem("environment-storage");
             } catch {
               console.error("localStorage remove error during logout");
             }

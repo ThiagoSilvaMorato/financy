@@ -4,6 +4,7 @@ import { Page } from "@/components/Page";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apolloClient } from "@/lib/graphql/apollo";
 import { USER } from "@/lib/graphql/mutation/User";
 import { useAuthStore } from "@/stores/auth";
@@ -12,6 +13,7 @@ import { LogOut, Mail, User } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import { EnvironmentsTab } from "./components/EnvironmentsTab";
 
 type UpdateUserMutationData = {
   updateUser: {
@@ -67,61 +69,78 @@ export const Profile = () => {
 
   return (
     <Page>
-      <div className='flex justify-center items-center'>
-        <Card className='w-full max-w-md rounded-xl'>
-          <CardHeader className='items-center gap-2'>
-            <Avatar style={{ width: 80, height: 80 }}>
-              <AvatarFallback className='bg-gray-300 text-2xl font-medium'>
-                {user?.name
-                  .split(" ")
-                  .slice(0, 2)
-                  .map((n) => n.charAt(0).toUpperCase())
-                  .join("")}
-              </AvatarFallback>
-            </Avatar>
-            <h2 className='text-2xl font-bold mt-4'>{user?.name}</h2>
-            <CardDescription>{user?.email}</CardDescription>
-          </CardHeader>
-          <div className='w-[90%] mx-auto mt-4 mb-8'>
-            <Divider />
-          </div>
-          <CardContent>
-            <div className='space-y-4'>
-              <CustomInput
-                label='Nome Completo'
-                id='name'
-                value={name}
-                setValue={setName}
-                icon={<User />}
-                placeholder='Seu nome completo'
-              />
-              <CustomInput
-                label='E-mail'
-                id='email'
-                value={email}
-                setValue={setEmail}
-                icon={<Mail />}
-                disabled
-                helperText='O e-mail não pode ser alterado'
-              />
-            </div>
+      <div className='flex flex-col items-center'>
+        <Tabs defaultValue='perfil' className='w-full max-w-2xl'>
+          <TabsList className='mx-auto flex w-full max-w-md'>
+            <TabsTrigger value='perfil' className='flex-1'>
+              Perfil
+            </TabsTrigger>
+            <TabsTrigger value='ambientes' className='flex-1'>
+              Ambientes
+            </TabsTrigger>
+          </TabsList>
 
-            <div className='mt-10'>
-              <Button className='w-full h-12' onClick={handleUpdateUser} disabled={loading}>
-                Salvar Alterações
-              </Button>
-              <Button
-                variant='outline'
-                className='w-full mt-3 h-12'
-                onClick={handleLogout}
-                disabled={loading}
-              >
-                <LogOut className='text-red-400' />
-                Sair da conta
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          <TabsContent value='perfil' className='flex justify-center'>
+            <Card className='w-full max-w-md rounded-xl'>
+              <CardHeader className='items-center gap-2'>
+                <Avatar style={{ width: 80, height: 80 }}>
+                  <AvatarFallback className='bg-gray-300 text-2xl font-medium'>
+                    {user?.name
+                      .split(" ")
+                      .slice(0, 2)
+                      .map((n) => n.charAt(0).toUpperCase())
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <h2 className='text-2xl font-bold mt-4'>{user?.name}</h2>
+                <CardDescription>{user?.email}</CardDescription>
+              </CardHeader>
+              <div className='w-[90%] mx-auto mt-4 mb-8'>
+                <Divider />
+              </div>
+              <CardContent>
+                <div className='space-y-4'>
+                  <CustomInput
+                    label='Nome Completo'
+                    id='name'
+                    value={name}
+                    setValue={setName}
+                    icon={<User />}
+                    placeholder='Seu nome completo'
+                  />
+                  <CustomInput
+                    label='E-mail'
+                    id='email'
+                    value={email}
+                    setValue={setEmail}
+                    icon={<Mail />}
+                    disabled
+                    helperText='O e-mail não pode ser alterado'
+                  />
+                </div>
+
+                <div className='mt-10'>
+                  <Button className='w-full h-12' onClick={handleUpdateUser} disabled={loading}>
+                    Salvar Alterações
+                  </Button>
+                  <Button
+                    variant='outline'
+                    className='w-full mt-3 h-12'
+                    onClick={handleLogout}
+                    disabled={loading}
+                  >
+                    <LogOut className='text-red-400' />
+                    Sair da conta
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value='ambientes'>
+            <EnvironmentsTab />
+          </TabsContent>
+        </Tabs>
       </div>
     </Page>
   );

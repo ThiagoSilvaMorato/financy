@@ -148,8 +148,10 @@ Atualizar o campo `Status` conforme o plano avança: `Aguardando aprovação` �
 ### 2. Registro de decisões (depois de implementar)
 
 Ao concluir a tarefa, criar um arquivo markdown em [`docs/`](docs/) (aqui no frontend) descrevendo
-a tarefa, e referenciar (link relativo) o plano aprovado em `docs/plans` que a originou. Nome do
-arquivo: `docs/AAAA-MM-DD-slug-da-tarefa.md`.
+a tarefa, e referenciar (link relativo) o plano aprovado em `docs/plans` que a originou. O arquivo
+é identificado pelo **número da tarefa** (o mesmo do plano que a originou), nunca por data — nome
+do arquivo: `docs/NN-slug-da-tarefa.md` (ex.: plano `01-FRONTEND-ambientes-compartilhados.md` →
+registro `docs/01-ambientes-compartilhados.md`, aqui dentro de `frontend/docs`).
 
 Template:
 
@@ -173,3 +175,19 @@ aderência aos padrões deste CLAUDE.md, limitações aceitas, etc.).
 Não é necessário plano nem doc para mudanças triviais (typo, ajuste de lint). Ambos são
 obrigatórios para qualquer tarefa que adicione/altere comportamento, componente, tela ou padrão
 de código.
+
+### 3. QA (comprovação de que os testes passaram)
+
+Quando uma tarefa tiver uma etapa de QA/teste (manual ou automatizado) contra o frontend, o
+resultado é documentado em **`docs/qa`** na raiz do projeto (compartilhada entre frontend e
+backend, assim como `docs/plans`) — nunca dentro de `frontend/docs`, que é reservado ao registro
+de decisões da etapa 2.
+
+- Nome do arquivo: `NN-QA-FRONT-slug-da-tarefa.md`, usando o **mesmo número e o mesmo slug** do
+  plano que originou a tarefa (ex.: plano `01-FRONTEND-ambientes-compartilhados.md` → QA
+  `01-QA-FRONT-ambientes-compartilhados.md`). O equivalente de backend usa `NN-QA-BACK-slug`.
+- O documento linka de volta pro plano aprovado e pro registro de decisões da tarefa.
+- Inclua: o que foi testado (idealmente mapeado aos riscos já levantados no plano), qualquer bug
+  encontrado e corrigido durante o QA, e como reproduzir o teste (passo a passo manual na
+  interface, e/ou script automatizado se houver) — isso vale tanto como prova de que passou
+  quanto como guia de regressão para a próxima vez que essa área for tocada.

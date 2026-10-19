@@ -7,4 +7,5 @@ export interface TransactionModel {
   date: string;
   category: CategoryModel;
   type: "income" | "expense";
+  memberId: string;
 }

@@ -21,8 +21,17 @@ const APPLY = process.argv.includes("--apply");
 async function main() {
   console.log(`\n=== Limpeza de dados de QA (${APPLY ? "APLICANDO" : "dry-run, nada será apagado"}) ===\n`);
 
+  // Duas convenções em uso: "qa-<run>-x@test.local" (script backend/scripts/qa-*.ts) e
+  // "qa.algo@example.com" (QA manual feito direto contra a API por um agente nesta mesma tarefa).
+  // Cobrir as duas evita falso-negativo — nenhuma delas é um domínio que entrega e-mail de
+  // verdade, então o critério é seguro.
   const qaUsers = await prismaClient.user.findMany({
-    where: { email: { startsWith: "qa-" }, AND: { email: { endsWith: "@test.local" } } },
+    where: {
+      OR: [
+        { AND: [{ email: { startsWith: "qa-" } }, { email: { endsWith: "@test.local" } }] },
+        { AND: [{ email: { startsWith: "qa." } }, { email: { endsWith: "@example.com" } }] },
+      ],
+    },
     select: { id: true, name: true, email: true },
   });
 

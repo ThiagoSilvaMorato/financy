@@ -6,6 +6,7 @@ import { apolloClient } from "@/lib/graphql/apollo";
 import { useEffect, useState } from "react";
 import { GET_CATEGORY } from "@/lib/graphql/queries/GetCategories";
 import { NewCategoryModal } from "./components/NewCategoryModal";
+import { useEnvironmentStore } from "@/stores/environment";
 import type { CategoryModel } from "@/shared/models/category";
 
 interface GetCategoryQueryData {
@@ -13,6 +14,7 @@ interface GetCategoryQueryData {
 }
 
 export const Categories = () => {
+  const currentEnvironmentId = useEnvironmentStore((state) => state.currentEnvironmentId);
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [totalTransactions, setTotalTransactions] = useState(0);
   const [mostUsedCategory, setMostUsedCategory] = useState<CategoryModel | null>(null);
@@ -21,8 +23,11 @@ export const Categories = () => {
   const [categoryToBeEdited, setCategoryToBeEdited] = useState<CategoryModel | null>(null);
 
   const fetchData = async () => {
+    if (!currentEnvironmentId) return;
+
     const { data } = await apolloClient.query<GetCategoryQueryData>({
       query: GET_CATEGORY,
+      variables: { environmentId: currentEnvironmentId },
       fetchPolicy: "no-cache",
     });
 
@@ -47,7 +52,8 @@ export const Categories = () => {
     (async () => {
       await fetchData();
     })();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentEnvironmentId]);
 
   return (
     <Page>
