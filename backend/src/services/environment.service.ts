@@ -369,10 +369,12 @@ export class EnvironmentService {
       );
     }
 
-    // Transaction precisa ser apagada antes de EnvironmentMember (Transaction.memberId é
-    // onDelete: Restrict) — mesmo padrão de $transaction já usado em CategoryService.deleteCategory.
+    // Transaction e InstallmentPurchase precisam ser apagados antes de EnvironmentMember
+    // (Transaction.memberId e InstallmentPurchase.memberId são onDelete: Restrict) — mesmo padrão
+    // de $transaction já usado em CategoryService.deleteCategory.
     await prismaClient.$transaction([
       prismaClient.transaction.deleteMany({ where: { environmentId } }),
+      prismaClient.installmentPurchase.deleteMany({ where: { environmentId } }),
       prismaClient.category.deleteMany({ where: { environmentId } }),
       prismaClient.environmentMember.deleteMany({ where: { environmentId } }),
       prismaClient.environment.delete({ where: { id: environmentId } }),

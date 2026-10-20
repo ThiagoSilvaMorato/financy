@@ -27,6 +27,8 @@ model User {
   environmentMemberships EnvironmentMember[]
   createdInviteCodes     EnvironmentInviteCode[]
 
+  createdInstallmentPurchases InstallmentPurchase[]
+
   // Ambiente usado por padrão no login. Nulo (ou apontando para um ambiente ao qual o usuário
   // perdeu acesso) cai de volta no ambiente pessoal — ver EnvironmentService.
   defaultEnvironmentId String?
@@ -54,6 +56,7 @@ model Environment {
   inviteCode   EnvironmentInviteCode?
   categories   Category[]
   transactions Transaction[]
+  installmentPurchases InstallmentPurchase[]
 
   defaultForUsers User[] @relation("UserDefaultEnvironment")
 }
@@ -81,6 +84,7 @@ model EnvironmentMember {
   removedAt     DateTime?
 
   transactions Transaction[]
+  installmentPurchases InstallmentPurchase[]
 
   // Vale sobre a tabela inteira (ativos e soft-deletados); Postgres trata múltiplos NULL como
   // distintos, então não afeta participantes. Reentrada após saída reaproveita a linha antiga
@@ -115,6 +119,7 @@ model Category {
   transactions      Transaction[]
   transactionsCount Int           @default(0)
   totalAmount       String        @default("0")
+  installmentPurchases InstallmentPurchase[]
 
   @@unique([environmentId, title])
 }
@@ -148,8 +153,45 @@ model Transaction {
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
+  // Preenchido quando esta transação é uma parcela gerada por createInstallmentPurchase (pagamento
+  // em crédito); null significa transação normal (Débito), o que já existe hoje. onDelete: SetNull
+  // (nunca Cascade/Restrict): se o InstallmentPurchase for apagado por qualquer motivo, a transação
+  // em si — histórico financeiro real — nunca deveria desaparecer, só perder o metadado de
+  // agrupamento. installmentNumber é só metadado (posição 1-based da parcela); a descrição
+  // formatada ("5/12") já é gravada direto em `description` na criação, não calculada depois.
+  installmentPurchaseId String?
+  installmentPurchase   InstallmentPurchase? @relation(fields: [installmentPurchaseId], references: [id], onDelete: SetNull)
+  installmentNumber     Int?
+
   // índices úteis
   @@index([date])
   @@index([environmentId])
   @@index([memberId])
+}
+
+// Agrupador/"recibo" de uma compra parcelada em N transações mensais (pagamento em crédito).
+// totalAmount/installmentAmount são calculados e persistidos no momento da criação (não
+// recalculados depois), pra sempre bater com o que de fato foi gerado, mesmo que no futuro alguém
+// edite uma parcela individual isolada. memberId com onDelete: Restrict: nunca deveria sofrer um
+// delete físico fora de um fluxo controlado — não existe fluxo de exclusão do InstallmentPurchase
+// nesta tarefa, então Restrict é só uma salvaguarda (ver deleteCategory/deleteEnvironment, que
+// apagam InstallmentPurchase explicitamente antes de poder violar essa restrição).
+model InstallmentPurchase {
+  id                String          @id @default(uuid())
+  description       String
+  type              TransactionType
+  totalAmount       String
+  installmentAmount String
+  installmentsCount Int
+  startDate         DateTime
+  categoryId        String
+  category          Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  environmentId     String
+  environment       Environment       @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  memberId          String
+  member            EnvironmentMember @relation(fields: [memberId], references: [id], onDelete: Restrict)
+  createdByUserId   String
+  createdByUser     User              @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+  transactions      Transaction[]
+  createdAt         DateTime          @default(now())
 }

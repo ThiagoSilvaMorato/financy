@@ -1,5 +1,5 @@
 import { TransactionType } from "@prisma/client";
-import { Field, GraphQLISODateTime, ID, ObjectType } from "type-graphql";
+import { Field, GraphQLISODateTime, ID, Int, ObjectType } from "type-graphql";
 import { CategoryModel } from "./category.model";
 import { UserModel } from "./user.model";
 import { EnvironmentMemberModel } from "./environment-member.model";
@@ -45,4 +45,13 @@ export class TransactionModel {
 
   @Field(() => GraphQLISODateTime)
   updatedAt!: Date;
+
+  // Preenchidos quando esta transação é uma parcela gerada por createInstallmentPurchase; null
+  // para transação normal (Débito). Só saída — não existem em CreateTransactionInput/
+  // UpdateTransactionInput (ver docs/plans/03-BACKEND-pagamento-credito.md).
+  @Field(() => String, { nullable: true })
+  installmentPurchaseId?: string | null;
+
+  @Field(() => Int, { nullable: true })
+  installmentNumber?: number | null;
 }

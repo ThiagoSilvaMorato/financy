@@ -27,6 +27,18 @@ input CreateEnvironmentInput {
   name: String!
 }
 
+input CreateInstallmentPurchaseInput {
+  amount: String!
+  amountIsTotal: Boolean!
+  categoryId: String!
+  description: String!
+  environmentId: String!
+  installmentsCount: Int!
+  memberId: String!
+  startDate: DateTimeISO!
+  type: String!
+}
+
 input CreateParticipantInput {
   displayName: String!
   environmentId: String!
@@ -97,6 +109,7 @@ type Mutation {
   approveMember(environmentId: String!, memberId: String!): EnvironmentMemberModel!
   createCategory(data: CreateCategoryInput!): CategoryModel!
   createEnvironment(data: CreateEnvironmentInput!): EnvironmentModel!
+  createInstallmentPurchase(data: CreateInstallmentPurchaseInput!): [TransactionModel!]!
   createParticipant(data: CreateParticipantInput!): EnvironmentMemberModel!
   createTransaction(data: CreateTransactionInput!): TransactionModel!
   createUser(data: CreateUserInput!): UserModel!
@@ -168,6 +181,8 @@ type TransactionModel {
   date: DateTimeISO!
   description: String
   id: ID!
+  installmentNumber: Int
+  installmentPurchaseId: String
   member: EnvironmentMemberModel!
   memberId: String!
   type: String!

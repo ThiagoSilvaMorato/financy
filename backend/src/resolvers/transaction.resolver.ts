@@ -6,7 +6,7 @@ import { GqlUser } from "../graphql/decorators/user.decorator";
 import { UserModel } from "../models/user.model";
 import { TransactionModel } from "../models/transaction.model";
 import { TransactionService } from "../services/transaction.service";
-import { CreateTransactionInput } from "../dto/input/transaction.input";
+import { CreateInstallmentPurchaseInput, CreateTransactionInput } from "../dto/input/transaction.input";
 import { EnvironmentMemberModel } from "../models/environment-member.model";
 import { prismaClient } from "../../prisma/prisma";
 
@@ -31,6 +31,14 @@ export class TransactionResolver {
     @GqlUser() user: UserModel
   ): Promise<TransactionModel> {
     return this.transactionService.updateTransaction(id, data, user.id);
+  }
+
+  @Mutation(() => [TransactionModel])
+  async createInstallmentPurchase(
+    @Arg("data", () => CreateInstallmentPurchaseInput) data: CreateInstallmentPurchaseInput,
+    @GqlUser() user: UserModel
+  ): Promise<TransactionModel[]> {
+    return this.transactionService.createInstallmentPurchase(data, user.id);
   }
 
   @Mutation(() => TransactionModel)

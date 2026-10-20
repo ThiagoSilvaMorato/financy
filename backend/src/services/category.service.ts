@@ -1,6 +1,7 @@
 import { prismaClient } from "../../prisma/prisma";
 import { CreateCategoryInput } from "../dto/input/category.input";
 import { assertEnvironmentAccess } from "../utils/environment-access";
+import { formatMoneyString, parseMoneyString } from "../utils/money";
 
 export class CategoryService {
   async createCategory(data: CreateCategoryInput, userId: string) {
@@ -79,6 +80,12 @@ export class CategoryService {
       prismaClient.transaction.deleteMany({
         where: { categoryId: id },
       }),
+      // InstallmentPurchase.categoryId é onDelete: Cascade no schema, mas apagamos explicitamente
+      // aqui em vez de depender disso — ver achado de revisão em
+      // docs/plans/03-BACKEND-pagamento-credito.md.
+      prismaClient.installmentPurchase.deleteMany({
+        where: { categoryId: id },
+      }),
       prismaClient.category.delete({
         where: { id },
       }),
@@ -109,16 +116,7 @@ export class CategoryService {
     let total = 0;
 
     for (const tx of transactions) {
-      const rawStr = String(tx.amount ?? "0").trim();
-
-      let normalized = rawStr;
-      if (rawStr.includes(".") && rawStr.includes(",")) {
-        normalized = rawStr.replace(/\./g, "").replace(",", ".");
-      } else if (rawStr.includes(",")) {
-        normalized = rawStr.replace(",", ".");
-      }
-
-      const value = parseFloat(normalized);
+      const value = parseMoneyString(tx.amount);
       if (isNaN(value)) continue;
 
       if (tx.type === "income") {
@@ -128,6 +126,6 @@ export class CategoryService {
       }
     }
 
-    return total.toFixed(2);
+    return formatMoneyString(total);
   }
 }
