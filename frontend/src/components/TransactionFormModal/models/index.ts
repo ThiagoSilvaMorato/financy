@@ -2,6 +2,8 @@ import type { SelectOption } from "@/components/CustomSelect/models";
 import type { TransactionModel } from "@/shared/models/transaction";
 import type { Dispatch, SetStateAction } from "react";
 
+export type PaymentMethod = "debit" | "credit";
+
 export interface NewTransactionForm {
   id?: string;
   type: "income" | "expense";
@@ -10,6 +12,9 @@ export interface NewTransactionForm {
   amount: string;
   categoryId: string;
   memberId: string;
+  paymentMethod?: PaymentMethod;
+  amountIsTotal?: boolean;
+  installmentsCount?: number;
 }
 
 export interface TransactionFormModalProps {

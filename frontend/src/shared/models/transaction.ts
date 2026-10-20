@@ -8,4 +8,6 @@ export interface TransactionModel {
   category: CategoryModel;
   type: "income" | "expense";
   memberId: string;
+  installmentPurchaseId?: string | null;
+  installmentNumber?: number | null;
 }

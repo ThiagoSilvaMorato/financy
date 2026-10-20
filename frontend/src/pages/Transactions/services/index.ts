@@ -3,6 +3,7 @@ import { CREATE_TRANSACTION } from "@/lib/graphql/mutation/CreateTransaction";
 import type { NewTransactionForm } from "../../../components/TransactionFormModal/models";
 import { UPDATE_TRANSACTION } from "@/lib/graphql/mutation/UpdateTransaction";
 import { DELETE_TRANSACTION } from "@/lib/graphql/mutation/DeleteTransaction";
+import { CREATE_INSTALLMENT_PURCHASE } from "@/lib/graphql/mutation/CreateInstallmentPurchase";
 import { useEnvironmentStore } from "@/stores/environment";
 
 interface DeleteTransactionMutationData {
@@ -28,12 +29,30 @@ interface UpdateTransactionMutationData {
   updateTransaction: NewTransactionForm;
 }
 
+interface CreateInstallmentPurchaseMutationData {
+  createInstallmentPurchase: NewTransactionForm[];
+}
+
 interface TransactionInputVariables {
   data: {
     type: "income" | "expense";
     description?: string;
     date: Date | undefined;
     amount: string;
+    categoryId: string;
+    memberId: string;
+    environmentId: string;
+  };
+}
+
+interface InstallmentPurchaseInputVariables {
+  data: {
+    type: "income" | "expense";
+    description: string;
+    amount: string;
+    amountIsTotal: boolean;
+    installmentsCount: number;
+    startDate: Date | undefined;
     categoryId: string;
     memberId: string;
     environmentId: string;
@@ -52,6 +71,28 @@ function buildTransactionInput(formData: NewTransactionForm): TransactionInputVa
     description: formData.description,
     date: formData.date,
     amount: formData.amount,
+    categoryId: formData.categoryId,
+    memberId: formData.memberId,
+    environmentId,
+  };
+}
+
+function buildInstallmentPurchaseInput(
+  formData: NewTransactionForm
+): InstallmentPurchaseInputVariables["data"] {
+  const environmentId = useEnvironmentStore.getState().currentEnvironmentId;
+
+  if (!environmentId) {
+    throw new Error("Nenhum ambiente ativo selecionado.");
+  }
+
+  return {
+    type: formData.type,
+    description: formData.description ?? "",
+    amount: formData.amount,
+    amountIsTotal: formData.amountIsTotal ?? true,
+    installmentsCount: formData.installmentsCount!,
+    startDate: formData.date,
     categoryId: formData.categoryId,
     memberId: formData.memberId,
     environmentId,
@@ -89,6 +130,18 @@ export const transactionService = {
       variables: {
         data: buildTransactionInput(formData),
         updateTransactionId: formData.id!,
+      },
+    });
+  },
+
+  createInstallmentPurchase: async (formData: NewTransactionForm) => {
+    return await apolloClient.mutate<
+      CreateInstallmentPurchaseMutationData,
+      InstallmentPurchaseInputVariables
+    >({
+      mutation: CREATE_INSTALLMENT_PURCHASE,
+      variables: {
+        data: buildInstallmentPurchaseInput(formData),
       },
     });
   },

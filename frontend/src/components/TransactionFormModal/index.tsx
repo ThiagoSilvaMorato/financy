@@ -7,11 +7,14 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
-import { Controller, useForm, type Resolver } from "react-hook-form";
+import { Controller, useForm, useWatch, type Resolver } from "react-hook-form";
 import type { NewTransactionForm, TransactionFormModalProps } from "./models";
 import { TypeSelector } from "./components/TypeSelector";
+import { PaymentMethodSelector } from "./components/PaymentMethodSelector";
 import { CustomInput } from "@/components/CustomInput";
+import { CustomCheckbox } from "@/components/CustomCheckbox";
 import { formatCurrency } from "@/utils/formatCurrency";
+import { stringToNumber } from "@/utils/stringToNumber";
 import { DatePicker } from "@/components/DatePicker";
 import { Button } from "@/components/ui/button";
 import { CustomSelect } from "@/components/CustomSelect";
@@ -37,6 +40,22 @@ const validationSchema = yup.object().shape({
     .trim()
     .required("Selecione a quem atribuir")
     .notOneOf(["select"], "Selecione a quem atribuir"),
+  paymentMethod: yup.string().oneOf(["debit", "credit"]).notRequired(),
+  amountIsTotal: yup.boolean().notRequired(),
+  // installmentsCount só é validado em Crédito — em Débito o campo nem aparece no formulário, e
+  // uma regra fixa aqui bloquearia o submit de uma transação comum (ver plano de frontend).
+  installmentsCount: yup
+    .number()
+    .transform((value, originalValue) => (originalValue === "" ? undefined : value))
+    .when("paymentMethod", {
+      is: "credit",
+      then: (schema) =>
+        schema
+          .required("Número de parcelas é obrigatório")
+          .min(2, "Pra 1x, use Débito.")
+          .max(60, "Máximo de 60 parcelas."),
+      otherwise: (schema) => schema.notRequired(),
+    }),
 });
 
 export const TransactionFormModal = ({
@@ -90,9 +109,43 @@ export const TransactionFormModal = ({
       amount: "",
       categoryId: "",
       memberId: "",
+      paymentMethod: "debit",
+      amountIsTotal: true,
+      installmentsCount: undefined,
     },
     resolver: yupResolver(validationSchema) as Resolver<NewTransactionForm>,
   });
+
+  const paymentMethod = useWatch({ control, name: "paymentMethod" });
+  const amountIsTotal = useWatch({ control, name: "amountIsTotal" });
+  const amountValue = useWatch({ control, name: "amount" });
+  const installmentsCountValue = useWatch({ control, name: "installmentsCount" });
+
+  const isCredit = paymentMethod === "credit";
+
+  const amountLabel = !isCredit
+    ? "Valor"
+    : amountIsTotal
+    ? "Valor total da compra"
+    : "Valor de cada parcela";
+
+  // Prévia client-side, só pra feedback visual imediato (arredondada a 2 casas decimais pra
+  // exibição) — a conta de verdade, com arredondamento na última parcela, é feita no backend.
+  const installmentsPreview = useMemo(() => {
+    if (!isCredit) return "";
+
+    const installments = installmentsCountValue;
+    if (!installments || installments < 2) return "";
+
+    const amountNumber = stringToNumber(amountValue ?? "");
+    if (!amountNumber || amountNumber <= 0) return "";
+
+    if (amountIsTotal) {
+      return `${installments}x de R$ ${formatCurrency(amountNumber / installments)}`;
+    }
+
+    return `Total: R$ ${formatCurrency(amountNumber * installments)}`;
+  }, [isCredit, installmentsCountValue, amountValue, amountIsTotal]);
 
   const handleFormSubmit = async (formData: NewTransactionForm) => {
     if (isEdit && !transactionInfo) {
@@ -124,6 +177,20 @@ export const TransactionFormModal = ({
         }
       } catch {
         toast.error("Erro ao editar a transação.");
+      }
+    } else if (formData.paymentMethod === "credit") {
+      try {
+        const { data } = await transactionService.createInstallmentPurchase(payload);
+
+        if (data?.createInstallmentPurchase) {
+          toast.success(`${data.createInstallmentPurchase.length} parcelas criadas`);
+          setIsOpen(false);
+          reset();
+
+          if (fetchData) await fetchData();
+        }
+      } catch {
+        toast.error("Erro ao criar a compra parcelada.");
       }
     } else {
       try {
@@ -179,6 +246,15 @@ export const TransactionFormModal = ({
               name='type'
               render={({ field }) => <TypeSelector value={field.value} setValue={setValue} />}
             />
+            {!isEdit && (
+              <Controller
+                control={control}
+                name='paymentMethod'
+                render={({ field }) => (
+                  <PaymentMethodSelector value={field.value ?? "debit"} setValue={setValue} />
+                )}
+              />
+            )}
             <Controller
               control={control}
               name='description'
@@ -200,7 +276,7 @@ export const TransactionFormModal = ({
                 render={({ field }) => (
                   <DatePicker
                     id='date'
-                    label='Data'
+                    label={isCredit ? "Data da 1ª parcela" : "Data"}
                     placeholder='Selecione'
                     error={errors.date?.message}
                     value={field.value ?? null}
@@ -208,28 +284,74 @@ export const TransactionFormModal = ({
                   />
                 )}
               />
-              <Controller
-                control={control}
-                name='amount'
-                render={({ field }) => (
-                  <CustomInput
-                    id='amount'
-                    type='text'
-                    label='Valor'
-                    prefix='R$'
-                    placeholder='0.00'
-                    error={errors.amount?.message}
-                    {...field}
-                    onChange={(e) => {
-                      const numericValue = e.target.value.replace(/[^0-9]/g, "");
-                      const numericValueAsNumber = parseFloat(numericValue) / 100;
+              <div className='space-y-2'>
+                <Controller
+                  control={control}
+                  name='amount'
+                  render={({ field }) => (
+                    <CustomInput
+                      id='amount'
+                      type='text'
+                      label={amountLabel}
+                      prefix='R$'
+                      placeholder='0.00'
+                      error={errors.amount?.message}
+                      {...field}
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/[^0-9]/g, "");
+                        const numericValueAsNumber = parseFloat(numericValue) / 100;
 
-                      field.onChange(formatCurrency(numericValueAsNumber));
-                    }}
+                        field.onChange(formatCurrency(numericValueAsNumber));
+                      }}
+                    />
+                  )}
+                />
+                {isCredit && (
+                  <Controller
+                    control={control}
+                    name='amountIsTotal'
+                    render={({ field }) => (
+                      <CustomCheckbox
+                        id='amountIsTotal'
+                        label='Esse é o valor total da compra'
+                        checked={field.value ?? true}
+                        onChange={(checked) => field.onChange(checked)}
+                      />
+                    )}
                   />
                 )}
-              />
+              </div>
             </div>
+            {isCredit && (
+              <div className='grid grid-cols-2 items-start gap-2'>
+                <Controller
+                  control={control}
+                  name='installmentsCount'
+                  render={({ field }) => (
+                    <CustomInput
+                      id='installmentsCount'
+                      type='number'
+                      label='Número de parcelas'
+                      placeholder='Ex: 12'
+                      min={2}
+                      max={60}
+                      step={1}
+                      error={errors.installmentsCount?.message}
+                      value={field.value !== undefined && field.value !== null ? String(field.value) : ""}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        field.onChange(raw === "" ? undefined : Number(raw));
+                      }}
+                    />
+                  )}
+                />
+                {installmentsPreview && (
+                  <div className='flex items-center h-12 text-sm text-zinc-500'>
+                    {installmentsPreview}
+                  </div>
+                )}
+              </div>
+            )}
             <Controller
               control={control}
               name='categoryId'
