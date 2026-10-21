@@ -39,7 +39,7 @@ export const RenameEnvironmentModal = ({
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     setValue,
   } = useForm<RenameEnvironmentForm>({
     defaultValues: { name: currentName },
@@ -92,7 +92,7 @@ export const RenameEnvironmentModal = ({
           </div>
 
           <DialogFooter className='mt-4'>
-            <Button type='submit' className='w-full h-12 text-md font-normal'>
+            <Button type='submit' className='w-full h-12 text-md font-normal' loading={isSubmitting}>
               Salvar
             </Button>
           </DialogFooter>

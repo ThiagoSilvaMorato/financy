@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { environmentManagementService } from "../../services";
 import type { EnvironmentMemberModel } from "@/shared/models/environment";
+import { usePendingKeys } from "@/hooks/usePendingKeys";
 
 interface MembersListProps {
   environmentId: string;
@@ -20,6 +21,8 @@ export const MembersList = ({
   currentMemberId,
   onChanged,
 }: MembersListProps) => {
+  const { isPending, run } = usePendingKeys();
+
   const adminsCount = members.filter((member) => member.role === "admin").length;
 
   const handlePromote = async (memberId: string) => {
@@ -57,6 +60,8 @@ export const MembersList = ({
         {members.map((member) => {
           const isSelf = member.id === currentMemberId;
           const blocksLastAdmin = member.role === "admin" && adminsCount === 1 && members.length > 1;
+          const promoteKey = `${member.id}:promote`;
+          const removeKey = `${member.id}:remove`;
 
           return (
             <div
@@ -75,20 +80,27 @@ export const MembersList = ({
                 {isAdmin && !isSelf && (
                   <>
                     {member.role !== "admin" && (
-                      <Button variant='outline' size='sm' onClick={() => handlePromote(member.id)}>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        loading={isPending(promoteKey)}
+                        disabled={isPending(removeKey)}
+                        onClick={() => run(promoteKey, () => handlePromote(member.id))}
+                      >
                         Promover a Admin
                       </Button>
                     )}
                     <Button
                       variant='outline'
                       size='sm'
-                      disabled={blocksLastAdmin}
+                      loading={isPending(removeKey)}
+                      disabled={blocksLastAdmin || isPending(promoteKey)}
                       title={
                         blocksLastAdmin
                           ? "Promova outro Admin antes de remover este membro"
                           : undefined
                       }
-                      onClick={() => handleRemove(member.id)}
+                      onClick={() => run(removeKey, () => handleRemove(member.id))}
                     >
                       Remover
                     </Button>

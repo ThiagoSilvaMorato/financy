@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, LogOut, Pencil, Star, Trash } from "lucide-react";
 import { useNavigate } from "react-router";
 import type { EnvironmentModel } from "@/shared/models/environment";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
 
 interface EnvironmentManagementHeaderProps {
   environment: EnvironmentModel;
@@ -10,7 +11,7 @@ interface EnvironmentManagementHeaderProps {
   canLeave: boolean;
   canDelete: boolean;
   onRename: () => void;
-  onSetDefault: () => void;
+  onSetDefault: () => Promise<void> | void;
   onLeave: () => void;
   onDelete: () => void;
 }
@@ -26,6 +27,7 @@ export const EnvironmentManagementHeader = ({
   onDelete,
 }: EnvironmentManagementHeaderProps) => {
   const navigate = useNavigate();
+  const { loading: isSettingDefault, run } = useAsyncAction();
 
   return (
     <div className='flex items-center justify-between'>
@@ -47,8 +49,8 @@ export const EnvironmentManagementHeader = ({
         </div>
       </div>
       <div className='flex items-center gap-2'>
-        <Button variant='outline' onClick={onSetDefault}>
-          <Star />
+        <Button variant='outline' loading={isSettingDefault} onClick={() => run(onSetDefault)}>
+          {!isSettingDefault && <Star />}
           Definir como padrão
         </Button>
         <Button

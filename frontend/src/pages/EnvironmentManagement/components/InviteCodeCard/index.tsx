@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { environmentManagementService } from "../../services";
 import type { EnvironmentInviteCodeModel } from "@/shared/models/environment";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
 
 interface InviteCodeCardProps {
   environmentId: string;
@@ -15,6 +16,7 @@ export const InviteCodeCard = ({ environmentId }: InviteCodeCardProps) => {
   const [inviteCode, setInviteCode] = useState<EnvironmentInviteCodeModel | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRegenerateOpen, setIsRegenerateOpen] = useState(false);
+  const { loading: isGenerating, run } = useAsyncAction();
 
   const fetchCurrentCode = useCallback(async () => {
     try {
@@ -76,7 +78,9 @@ export const InviteCodeCard = ({ environmentId }: InviteCodeCardProps) => {
               <Button variant='outline' onClick={() => setIsRegenerateOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleGenerate}>Confirmar</Button>
+              <Button loading={isGenerating} onClick={() => run(handleGenerate)}>
+                Confirmar
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -111,8 +115,13 @@ export const InviteCodeCard = ({ environmentId }: InviteCodeCardProps) => {
             </Button>
           </>
         ) : (
-          <Button size='sm' className='self-start' onClick={handleGenerate}>
-            <RefreshCw />
+          <Button
+            size='sm'
+            className='self-start'
+            loading={isGenerating}
+            onClick={() => run(handleGenerate)}
+          >
+            {!isGenerating && <RefreshCw />}
             Gerar código de convite
           </Button>
         )}

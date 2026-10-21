@@ -1,7 +1,6 @@
 import logo from "@/assets/logo.svg";
 import { CustomInput } from "@/components/CustomInput";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
 import { LogIn, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Divider from "@/components/Divider";
@@ -19,14 +18,12 @@ const validationSchema = yup.object().shape({
 });
 
 export const RecoverPassword = () => {
-  const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
 
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<RecoverPasswordForm>({
     defaultValues: {
       email: "",
@@ -35,8 +32,6 @@ export const RecoverPassword = () => {
   });
 
   const handleFormSubmit = async (data: RecoverPasswordForm) => {
-    setLoading(true);
-
     try {
       const recoverPassworMutate = await apolloClient.mutate({
         mutation: RECOVER_PASSWORD,
@@ -51,8 +46,6 @@ export const RecoverPassword = () => {
       }
     } catch {
       toast.error("Erro ao enviar o código. Tente novamente.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -85,7 +78,7 @@ export const RecoverPassword = () => {
               )}
             />
 
-            <Button type='submit' className='w-full mt-4 h-[48px]' disabled={loading}>
+            <Button type='submit' className='w-full mt-4 h-[48px]' loading={isSubmitting}>
               Enviar código
             </Button>
           </form>
@@ -98,7 +91,7 @@ export const RecoverPassword = () => {
             variant='outline'
             className='w-full mt-4 h-[48px]'
             onClick={() => navigate("/")}
-            disabled={loading}
+            disabled={isSubmitting}
           >
             <LogIn size={20} className='mr-2' />
             Fazer login

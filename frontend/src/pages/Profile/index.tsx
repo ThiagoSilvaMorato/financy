@@ -14,6 +14,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { EnvironmentsTab } from "./components/EnvironmentsTab";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
 
 type UpdateUserMutationData = {
   updateUser: {
@@ -27,9 +28,11 @@ export const Profile = () => {
 
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
-  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  const { loading: isUpdatingUser, run: runUpdateUser } = useAsyncAction();
+  const { loading: isLoggingOut, run: runLogout } = useAsyncAction();
 
   const handleUpdateUser = async () => {
     try {
@@ -55,15 +58,12 @@ export const Profile = () => {
   };
 
   const handleLogout = async () => {
-    setLoading(true);
     try {
       await logout();
 
       navigate("/");
-    } catch {
-      console.error("Erro ao sair da conta.");
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao sair da conta.");
     }
   };
 
@@ -120,16 +120,20 @@ export const Profile = () => {
                 </div>
 
                 <div className='mt-10'>
-                  <Button className='w-full h-12' onClick={handleUpdateUser} disabled={loading}>
+                  <Button
+                    className='w-full h-12'
+                    loading={isUpdatingUser}
+                    onClick={() => runUpdateUser(handleUpdateUser)}
+                  >
                     Salvar Alterações
                   </Button>
                   <Button
                     variant='outline'
                     className='w-full mt-3 h-12'
-                    onClick={handleLogout}
-                    disabled={loading}
+                    loading={isLoggingOut}
+                    onClick={() => runLogout(handleLogout)}
                   >
-                    <LogOut className='text-red-400' />
+                    {!isLoggingOut && <LogOut className='text-red-400' />}
                     Sair da conta
                   </Button>
                 </div>

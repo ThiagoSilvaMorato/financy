@@ -1,7 +1,6 @@
 import logo from "@/assets/logo.svg";
 import { CustomInput } from "@/components/CustomInput";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
 import { KeyRound, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router";
@@ -31,12 +30,11 @@ const validationSchema = yup.object().shape({
 export const ResetPassword = () => {
   const location = useLocation();
   const emailFromState = location.state?.email;
-  const [loading, setLoading] = useState(false);
 
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<ResetPasswordForm>({
     defaultValues: {
       email: emailFromState || "",
@@ -50,8 +48,6 @@ export const ResetPassword = () => {
   const navigate = useNavigate();
 
   const handleFormSubmit = async (data: ResetPasswordForm) => {
-    setLoading(true);
-
     try {
       const resetPasswordMutate = await apolloClient.mutate({
         mutation: RESET_PASSWORD,
@@ -66,8 +62,6 @@ export const ResetPassword = () => {
       }
     } catch {
       toast.error("Erro ao redefinir senha. Tente novamente.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -144,7 +138,7 @@ export const ResetPassword = () => {
             />
 
             <div className='pt-3'>
-              <Button type='submit' className='w-full h-[48px]' disabled={loading}>
+              <Button type='submit' className='w-full h-[48px]' loading={isSubmitting}>
                 Redefinir senha
               </Button>
             </div>

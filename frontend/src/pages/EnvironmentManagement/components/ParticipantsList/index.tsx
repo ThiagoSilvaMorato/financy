@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { environmentManagementService } from "../../services";
 import { CreateParticipantModal } from "../CreateParticipantModal";
 import type { EnvironmentMemberModel } from "@/shared/models/environment";
+import { usePendingKeys } from "@/hooks/usePendingKeys";
 
 interface ParticipantsListProps {
   environmentId: string;
@@ -21,6 +22,7 @@ export const ParticipantsList = ({
   onChanged,
 }: ParticipantsListProps) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { isPending, run } = usePendingKeys();
 
   const handleRemove = async (memberId: string) => {
     try {
@@ -66,7 +68,12 @@ export const ParticipantsList = ({
           >
             <span className='font-medium truncate'>{participant.displayName}</span>
             {isAdmin && (
-              <Button variant='outline' size='sm' onClick={() => handleRemove(participant.id)}>
+              <Button
+                variant='outline'
+                size='sm'
+                loading={isPending(participant.id)}
+                onClick={() => run(participant.id, () => handleRemove(participant.id))}
+              >
                 Remover
               </Button>
             )}

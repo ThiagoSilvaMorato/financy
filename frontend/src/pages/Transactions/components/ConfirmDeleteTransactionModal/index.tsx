@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
 
 interface ConfirmDeleteTransactionModalProps {
   isOpen: boolean;
@@ -14,6 +15,8 @@ export const ConfirmDeleteTransactionModal = ({
   onConfirm,
   transactionTitle,
 }: ConfirmDeleteTransactionModalProps) => {
+  const { loading: isDeleting, run } = useAsyncAction();
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -28,7 +31,9 @@ export const ConfirmDeleteTransactionModal = ({
             <Button variant='outline' onClick={onClose}>
               Cancelar
             </Button>
-            <Button onClick={onConfirm}>Confirmar</Button>
+            <Button loading={isDeleting} onClick={() => run(onConfirm)}>
+              Confirmar
+            </Button>
           </div>
         </div>
       </DialogContent>

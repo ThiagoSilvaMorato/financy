@@ -34,7 +34,7 @@ export const CreateEnvironmentModal = ({
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     reset,
   } = useForm<NewEnvironmentForm>({
     defaultValues: { name: "" },
@@ -89,7 +89,7 @@ export const CreateEnvironmentModal = ({
           </div>
 
           <DialogFooter className='mt-4'>
-            <Button type='submit' className='w-full h-12 text-md font-normal'>
+            <Button type='submit' className='w-full h-12 text-md font-normal' loading={isSubmitting}>
               Criar
             </Button>
           </DialogFooter>

@@ -1,7 +1,6 @@
 import logo from "@/assets/logo.svg";
 import { CustomInput } from "@/components/CustomInput";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
 import { Lock, LogIn, Mail, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Divider from "@/components/Divider";
@@ -24,15 +23,13 @@ const validationSchema = yup.object().shape({
 });
 
 export const Signup = () => {
-  const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
   const signup = useAuthStore((state) => state.signup);
 
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<SignupForm>({
     defaultValues: {
       name: "",
@@ -43,8 +40,6 @@ export const Signup = () => {
   });
 
   const handleFormSubmit = async (data: SignupForm) => {
-    setLoading(true);
-
     try {
       const signupMutate = await signup(data);
 
@@ -54,8 +49,6 @@ export const Signup = () => {
       }
     } catch {
       toast.error("Erro ao cadastrar usuário. Tente novamente.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -117,7 +110,7 @@ export const Signup = () => {
             />
 
             <div className='pt-3'>
-              <Button type='submit' className='w-full h-[48px]' disabled={loading}>
+              <Button type='submit' className='w-full h-[48px]' loading={isSubmitting}>
                 Cadastrar
               </Button>
             </div>

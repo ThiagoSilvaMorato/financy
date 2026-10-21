@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { environmentManagementService } from "../../services";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
 
 interface DeleteEnvironmentModalProps {
   environmentId: string;
@@ -18,6 +19,8 @@ export const DeleteEnvironmentModal = ({
   onClose,
   onDeleted,
 }: DeleteEnvironmentModalProps) => {
+  const { loading: isDeleting, run } = useAsyncAction();
+
   const handleConfirm = async () => {
     try {
       const { data } = await environmentManagementService.deleteEnvironment(environmentId);
@@ -46,7 +49,7 @@ export const DeleteEnvironmentModal = ({
             <Button variant='outline' onClick={onClose}>
               Cancelar
             </Button>
-            <Button variant='destructive' onClick={handleConfirm}>
+            <Button variant='destructive' loading={isDeleting} onClick={() => run(handleConfirm)}>
               Confirmar
             </Button>
           </div>

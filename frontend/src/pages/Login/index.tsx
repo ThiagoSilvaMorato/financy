@@ -1,7 +1,6 @@
 import logo from "@/assets/logo.svg";
 import { CustomInput } from "@/components/CustomInput";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
 import { Lock, Mail, UserRoundPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CustomCheckbox } from "@/components/CustomCheckbox";
@@ -21,15 +20,13 @@ const validationSchema = yup.object().shape({
 });
 
 export const Login = () => {
-  const [loading, setLoading] = useState(false);
-
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginForm>({
     defaultValues: {
       email: "",
@@ -40,8 +37,6 @@ export const Login = () => {
   });
 
   const handleFormSubmit = async (data: LoginForm) => {
-    setLoading(true);
-
     try {
       const loginMutate = await login(data);
 
@@ -51,8 +46,6 @@ export const Login = () => {
       }
     } catch {
       toast.error("Erro ao fazer login. Verifique suas credenciais.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -119,7 +112,7 @@ export const Login = () => {
               </span>
             </div>
 
-            <Button type='submit' className='w-full mt-4 h-[48px]' disabled={loading}>
+            <Button type='submit' className='w-full mt-4 h-[48px]' loading={isSubmitting}>
               Entrar
             </Button>
           </form>

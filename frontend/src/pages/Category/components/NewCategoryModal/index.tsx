@@ -37,7 +37,7 @@ export const NewCategoryModal = ({
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     reset,
     setValue,
   } = useForm<NewCategoryForm>({
@@ -188,7 +188,7 @@ export const NewCategoryModal = ({
           </div>
 
           <DialogFooter>
-            <Button type='submit' className='w-full h-12 text-md font-normal'>
+            <Button type='submit' className='w-full h-12 text-md font-normal' loading={isSubmitting}>
               Salvar
             </Button>
           </DialogFooter>

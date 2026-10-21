@@ -16,6 +16,7 @@ import { useState } from "react";
 import { environmentsTabService } from "../../services";
 import type { JoinByCodeForm } from "../../models";
 import type { Dispatch, SetStateAction } from "react";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
 
 const validationSchema = yup.object().shape({
   code: yup.string().trim().required("Código é obrigatório"),
@@ -35,13 +36,15 @@ export const JoinByCodeModal = ({ isOpen, setIsOpen, onJoined }: JoinByCodeModal
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     reset,
     getValues,
   } = useForm<JoinByCodeForm>({
     defaultValues: { code: "" },
     resolver: yupResolver(validationSchema) as Resolver<JoinByCodeForm>,
   });
+
+  const { loading: isConfirming, run } = useAsyncAction();
 
   const handlePreview = async (formData: JoinByCodeForm) => {
     try {
@@ -112,7 +115,7 @@ export const JoinByCodeModal = ({ isOpen, setIsOpen, onJoined }: JoinByCodeModal
               />
             </div>
             <DialogFooter className='mt-4'>
-              <Button type='submit' className='w-full h-12 text-md font-normal'>
+              <Button type='submit' className='w-full h-12 text-md font-normal' loading={isSubmitting}>
                 Continuar
               </Button>
             </DialogFooter>
@@ -129,7 +132,9 @@ export const JoinByCodeModal = ({ isOpen, setIsOpen, onJoined }: JoinByCodeModal
                 <Button variant='outline' onClick={() => setPreviewEnvironment(null)}>
                   Voltar
                 </Button>
-                <Button onClick={handleConfirm}>Confirmar</Button>
+                <Button loading={isConfirming} onClick={() => run(handleConfirm)}>
+                  Confirmar
+                </Button>
               </div>
             </div>
           </>

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { environmentManagementService } from "../../services";
 import type { EnvironmentMemberModel } from "@/shared/models/environment";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
 
 interface LeaveEnvironmentModalProps {
   environmentId: string;
@@ -24,6 +25,7 @@ export const LeaveEnvironmentModal = ({
   otherMembers,
 }: LeaveEnvironmentModalProps) => {
   const [newAdminMemberId, setNewAdminMemberId] = useState("select");
+  const { loading: isLeaving, run } = useAsyncAction();
 
   const newAdminOptions = [
     { label: "Selecione", value: "select", disabled: true },
@@ -80,7 +82,9 @@ export const LeaveEnvironmentModal = ({
             <Button variant='outline' onClick={onClose}>
               Cancelar
             </Button>
-            <Button onClick={handleConfirm}>Confirmar</Button>
+            <Button loading={isLeaving} onClick={() => run(handleConfirm)}>
+              Confirmar
+            </Button>
           </div>
         </div>
       </DialogContent>
